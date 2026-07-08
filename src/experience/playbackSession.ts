@@ -34,16 +34,16 @@ const playbackStatusByAudioStatus: Record<SentenceAudioStatus, PlaybackStatus> =
 const loadingSnapshotFor = (sentenceId: string): PlaybackSnapshot => ({
   activeSentenceId: sentenceId,
   status: "loading",
-  statusLabel: "正在加载原型音频",
-  statusDetail: "正在解析 Nushu TTS prototype audio / 女书 TTS 原型音频状态。"
+  statusLabel: "正在准备这句声音",
+  statusDetail: "正在准备女书点读声音。"
 });
 
 const fallbackLabelByStatus: Record<PlaybackStatus, string> = {
   idle: idleSnapshot.statusLabel,
-  loading: "正在加载原型音频",
-  playing: "原型音频可播放",
-  missing: "原型音频暂缺",
-  failed: "原型音频不可播放"
+  loading: "正在准备这句声音",
+  playing: "声音正在播放",
+  missing: "这句声音暂未准备好",
+  failed: "声音暂时不可播放"
 };
 
 export function createPlaybackSession(

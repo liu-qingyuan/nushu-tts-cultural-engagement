@@ -63,8 +63,10 @@ describe("default Nushu story experience", () => {
     const entry = getVisibleJourneyEntry();
 
     expect(entry.title).toContain("女书故事");
-    expect(entry.primaryActionLabel).toBe("开始默认体验");
+    expect(entry.summary).toContain("逐句点读");
+    expect(entry.primaryActionLabel).toBe("开始阅读体验");
     expect(entry.studyPromise).toContain("不连接后端");
+    expect(entry.studyPromise).not.toMatch(/原型|mock|prototype|真实模型/i);
   });
 
   it("keeps the top-level module focused on the visible journey", () => {
@@ -122,7 +124,26 @@ describe("default Nushu story experience", () => {
     expect(app?.textContent).toContain("并非未经改动的原始文献");
   });
 
-  it("lets users click a sentence to see synchronized prototype audio state", async () => {
+  it("puts bilingual Nushu reading and sentence listening in the first screen", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    const preview = app?.querySelector<HTMLElement>(".story-preview");
+
+    expect(preview?.textContent).toContain("𛅰𛅱𛅲");
+    expect(preview?.textContent).toContain("远方的姐妹");
+    expect(preview?.textContent).toContain("Distant sister");
+    expect(preview?.textContent).toContain("三朝书常在女性出嫁后");
+    expect(preview?.textContent).toContain("逐句点读 / Tap to listen");
+    expect(app?.textContent).not.toContain("普通 TTS baseline");
+    expect(app?.textContent).not.toMatch(/baseline/i);
+    expect(app?.textContent).not.toMatch(/原型|mock|prototype|真实模型/i);
+  });
+
+  it("lets users click a sentence to see synchronized reading audio state", async () => {
     document.body.innerHTML = '<div id="app"></div>';
 
     const { renderExperience } = await import("../main");
@@ -134,18 +155,16 @@ describe("default Nushu story experience", () => {
       (button) => button.textContent?.includes("远方的姐妹")
     );
 
-    expect(app?.textContent).toContain(
-      "Nushu TTS prototype audio / 女书 TTS 原型音频"
-    );
+    expect(app?.textContent).toContain("女书声音提示");
     expect(greeting).toBeDefined();
 
     greeting?.click();
     await waitForPrototypeAudio();
 
     expect(greeting?.getAttribute("aria-pressed")).toBe("true");
-    expect(greeting?.textContent).toContain("正在播放 mock 原型音频");
+    expect(greeting?.textContent).toContain("正在播放示意声音");
     expect(greeting?.textContent).toContain("Distant sister");
-    expect(greeting?.textContent).toContain("不代表真实模型效果");
+    expect(greeting?.textContent).toContain("后续会替换为正式点读音频");
   });
 
   it("keeps sentence playback mutually exclusive in the rendered story", async () => {
@@ -169,12 +188,12 @@ describe("default Nushu story experience", () => {
     await waitForPrototypeAudio();
 
     expect(greeting?.getAttribute("aria-pressed")).toBe("false");
-    expect(greeting?.textContent).not.toContain("正在播放 mock 原型音频");
+    expect(greeting?.textContent).not.toContain("正在播放示意声音");
     expect(memory?.getAttribute("aria-pressed")).toBe("true");
-    expect(memory?.textContent).toContain("正在播放 mock 原型音频");
+    expect(memory?.textContent).toContain("正在播放示意声音");
   });
 
-  it("shows a clear user-visible state when prototype audio is missing", async () => {
+  it("shows a clear user-visible state when sentence audio is missing", async () => {
     document.body.innerHTML = '<div id="app"></div>';
 
     const { renderExperience } = await import("../main");
@@ -189,8 +208,8 @@ describe("default Nushu story experience", () => {
     await waitForPrototypeAudio();
 
     expect(promise?.getAttribute("aria-pressed")).toBe("true");
-    expect(promise?.textContent).toContain("原型音频暂缺");
-    expect(promise?.textContent).toContain("Nushu TTS prototype audio");
+    expect(promise?.textContent).toContain("这句声音暂未准备好");
+    expect(promise?.textContent).toContain("女书声音提示");
   });
 
   it("renders participation actions with visible save, share, and learn-more outcomes", async () => {

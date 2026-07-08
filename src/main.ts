@@ -79,23 +79,53 @@ export function renderExperience(
   const preview = document.createElement("div");
   preview.className = "story-preview";
   preview.setAttribute("aria-label", experience.name);
+  const openingSentence = experience.story.sentences[0];
 
   const visual = document.createElement("div");
   visual.className = "story-preview__visual";
-  visual.setAttribute("aria-hidden", "true");
-  ["女", "书", "听"].forEach((glyph) => {
-    appendTextElement(visual, "span", "", glyph);
-  });
+  const previewScript = appendTextElement(
+    visual,
+    "span",
+    "story-preview__script",
+    openingSentence?.nushuText ?? "女书"
+  );
+  previewScript.lang = "zh-Nshu";
+  appendTextElement(
+    visual,
+    "span",
+    "story-preview__listen-label",
+    "逐句点读 / Tap to listen"
+  );
+  appendTextElement(
+    visual,
+    "span",
+    "story-preview__listen-status",
+    "点读状态会与当前句子同步"
+  );
   preview.append(visual);
 
   const previewBody = document.createElement("div");
+  previewBody.className = "story-preview__body";
   appendTextElement(previewBody, "p", "preview-kicker", experience.audience);
   appendTextElement(previewBody, "h2", "", experience.story.title);
   appendTextElement(
     previewBody,
     "p",
-    "",
-    "打开页面即可阅读默认女书故事。本切片聚焦结构化故事、翻译、文化说明和来源标注。"
+    "story-preview__translation",
+    openingSentence?.zhText ?? "阅读一段女书故事。"
+  );
+  appendTextElement(
+    previewBody,
+    "p",
+    "story-preview__english",
+    openingSentence?.enText ?? "Read a Nushu story."
+  );
+  appendTextElement(
+    previewBody,
+    "p",
+    "story-preview__note",
+    openingSentence?.culturalNote ??
+      "每句都配有普通读者可读的文化说明。"
   );
   preview.append(previewBody);
 
@@ -118,14 +148,19 @@ export function renderExperience(
 
   const preHeader = document.createElement("div");
   preHeader.className = "pre-panel__header";
-  appendTextElement(preHeader, "p", "eyebrow", "Pre-Experience Check");
-  const preTitle = appendTextElement(preHeader, "h2", "", "体验前问题");
+  appendTextElement(preHeader, "p", "eyebrow", "阅读前记录 / Before Reading");
+  const preTitle = appendTextElement(
+    preHeader,
+    "h2",
+    "",
+    "进入故事前，先记录你的起点"
+  );
   preTitle.id = "pre-title";
   appendTextElement(
     preHeader,
     "p",
     "pre-panel__intro",
-    "进入故事前，请用 1-5 分记录你当前对女书的了解程度、兴趣和继续探索意愿。"
+    "用 1-5 分记录你当前对女书的了解程度、兴趣和继续探索意愿。完成后会进入中英双语故事阅读。"
   );
   preSection.append(preHeader);
 
@@ -280,7 +315,7 @@ export function renderExperience(
 
   const storyHeader = document.createElement("div");
   storyHeader.className = "story-reader__header";
-  appendTextElement(storyHeader, "p", "eyebrow", "Default Nushu Story");
+  appendTextElement(storyHeader, "p", "eyebrow", "女书故事阅读 / Nushu Story Reader");
   const storyTitle = appendTextElement(
     storyHeader,
     "h2",
@@ -338,7 +373,7 @@ export function renderExperience(
       if (detailElement) {
         detailElement.textContent = isActive
           ? snapshot.statusDetail
-          : "点击这句体验 mock 原型音频状态。";
+          : "点击这句听女书点读声音。";
       }
     });
   }
@@ -370,7 +405,7 @@ export function renderExperience(
       button,
       "span",
       "sentence__audio-detail",
-      "点击这句体验 mock 原型音频状态。"
+      "点击这句听女书点读声音。"
     );
 
     button.addEventListener("click", async () => {
@@ -401,7 +436,12 @@ export function renderExperience(
 
   const participationHeader = document.createElement("div");
   participationHeader.className = "participation-actions__header";
-  appendTextElement(participationHeader, "p", "eyebrow", "Cultural Engagement");
+  appendTextElement(
+    participationHeader,
+    "p",
+    "eyebrow",
+    "文化参与 / Cultural Engagement"
+  );
   const participationTitle = appendTextElement(
     participationHeader,
     "h3",
@@ -506,7 +546,12 @@ export function renderExperience(
 
   const feedbackHeader = document.createElement("div");
   feedbackHeader.className = "feedback-panel__header";
-  appendTextElement(feedbackHeader, "p", "eyebrow", "Post-Experience Feedback");
+  appendTextElement(
+    feedbackHeader,
+    "p",
+    "eyebrow",
+    "阅读后反馈 / After Reading"
+  );
   const feedbackTitle = appendTextElement(
     feedbackHeader,
     "h2",

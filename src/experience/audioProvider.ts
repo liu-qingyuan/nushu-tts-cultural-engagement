@@ -12,7 +12,7 @@ export interface AudioProvider {
 }
 
 const prototypeAudioDetail =
-  "Nushu TTS prototype audio / 女书 TTS 原型音频；当前为占位播放状态，不代表真实模型效果。";
+  "女书声音提示：当前为示意声音，后续会替换为正式点读音频。";
 
 export const mockNushuAudioProvider: AudioProvider = {
   async getSentenceAudio(sentenceId) {
@@ -20,7 +20,7 @@ export const mockNushuAudioProvider: AudioProvider = {
       return {
         sentenceId,
         status: "missing",
-        statusLabel: "原型音频暂缺",
+        statusLabel: "这句声音暂未准备好",
         statusDetail: prototypeAudioDetail
       };
     }
@@ -28,7 +28,7 @@ export const mockNushuAudioProvider: AudioProvider = {
     return {
       sentenceId,
       status: "ready",
-      statusLabel: "正在播放 mock 原型音频",
+      statusLabel: "正在播放示意声音",
       statusDetail: prototypeAudioDetail
     };
   }
