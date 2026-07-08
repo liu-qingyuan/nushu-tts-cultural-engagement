@@ -199,9 +199,17 @@ h1 {
   line-height: 1.78;
 }
 
+.story-reader__audio-note {
+  max-width: 78ch;
+  margin: 18px 0 0;
+  color: #6f2c2c;
+  font-size: 0.98rem;
+  font-weight: 720;
+  line-height: 1.65;
+}
+
 .sentence-list {
   display: grid;
-  gap: 18px;
   max-width: 1080px;
   margin: 0;
   padding: 0;
@@ -212,20 +220,50 @@ h1 {
   display: grid;
   grid-template-columns: minmax(180px, 0.6fr) minmax(0, 1fr);
   gap: 12px 28px;
+  width: 100%;
   padding: 24px 0;
+  border: 0;
   border-top: 1px solid rgba(27, 27, 29, 0.18);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    padding 160ms ease;
 }
 
-.sentence:last-child {
+.sentence-list__item:last-child .sentence {
   border-bottom: 1px solid rgba(27, 27, 29, 0.18);
 }
 
-.sentence p {
-  margin: 0;
+.sentence:hover {
+  background: rgba(233, 242, 238, 0.52);
+}
+
+.sentence:focus-visible {
+  outline: 3px solid #c8683f;
+  outline-offset: 4px;
+}
+
+.sentence--active {
+  padding-right: 18px;
+  padding-left: 18px;
+  border-color: rgba(111, 44, 44, 0.5);
+  background: #f8efe2;
+  box-shadow: inset 4px 0 0 #6f2c2c;
+}
+
+.sentence--active[data-playback-status="missing"],
+.sentence--active[data-playback-status="failed"] {
+  background: #fff4e6;
 }
 
 .sentence__nushu {
-  grid-row: span 3;
+  grid-row: span 5;
   color: #6f2c2c;
   font-family: "Noto Sans Nushu", "Noto Sans Symbols 2", serif;
   font-size: 3.2rem;
@@ -250,6 +288,19 @@ h1 {
   color: #68666a;
   font-size: 0.95rem;
   line-height: 1.68;
+}
+
+.sentence__audio-status {
+  color: #6f2c2c;
+  font-size: 0.94rem;
+  font-weight: 760;
+  line-height: 1.5;
+}
+
+.sentence__audio-detail {
+  color: #68666a;
+  font-size: 0.9rem;
+  line-height: 1.58;
 }
 
 .source-note {

@@ -68,8 +68,13 @@ participant-facing entry point and the default structured story:
 - a study note that makes the prototype boundary explicit
 - a default story with stable sentence ids, Nushu text, Chinese explanation,
   English support text, cultural notes, and source/adaptation labeling
+- sentence-level prototype audio state that keeps the selected Nushu text,
+  translations, notes, and playback status synchronized
 
 The story content is currently provided by a local structured data adapter
-behind the story content interface. Audio provider and feedback collector seams
-remain reserved for later slices. This prototype does not lock in a baseline TTS
+behind the story content interface. Prototype audio is provided through an
+audio provider interface and a mock adapter; the playback session owns the
+current sentence, switching, stop state, and highlight synchronization. The mock
+adapter is not a real TTS model quality claim. Feedback collector seams remain
+reserved for later slices. This prototype does not lock in a baseline TTS
 comparison, backend, account system, CMS, or real TTS model.

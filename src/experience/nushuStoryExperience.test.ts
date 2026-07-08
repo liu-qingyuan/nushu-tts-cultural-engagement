@@ -7,6 +7,12 @@ import {
 } from "./nushuStoryExperience";
 import { getDefaultStory } from "./storyContent";
 
+function waitForPrototypeAudio() {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
 describe("default Nushu story experience", () => {
   it("exposes a user-visible research journey entry", () => {
     const entry = getVisibleJourneyEntry();
@@ -61,5 +67,73 @@ describe("default Nushu story experience", () => {
     expect(app?.textContent).toContain("Distant sister");
     expect(app?.textContent).toContain("承载祝福");
     expect(app?.textContent).toContain("并非未经改动的原始文献");
+  });
+
+  it("lets users click a sentence to see synchronized prototype audio state", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    const greeting = Array.from(app?.querySelectorAll("button") ?? []).find(
+      (button) => button.textContent?.includes("远方的姐妹")
+    );
+
+    expect(app?.textContent).toContain(
+      "Nushu TTS prototype audio / 女书 TTS 原型音频"
+    );
+    expect(greeting).toBeDefined();
+
+    greeting?.click();
+    await waitForPrototypeAudio();
+
+    expect(greeting?.getAttribute("aria-pressed")).toBe("true");
+    expect(greeting?.textContent).toContain("正在播放 mock 原型音频");
+    expect(greeting?.textContent).toContain("Distant sister");
+    expect(greeting?.textContent).toContain("不代表真实模型效果");
+  });
+
+  it("keeps sentence playback mutually exclusive in the rendered story", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+    const buttons = Array.from(app?.querySelectorAll("button") ?? []);
+    const greeting = buttons.find((button) =>
+      button.textContent?.includes("远方的姐妹")
+    );
+    const memory = buttons.find((button) =>
+      button.textContent?.includes("我们把旧日的歌写下")
+    );
+
+    greeting?.click();
+    await waitForPrototypeAudio();
+    memory?.click();
+    await waitForPrototypeAudio();
+
+    expect(greeting?.getAttribute("aria-pressed")).toBe("false");
+    expect(greeting?.textContent).not.toContain("正在播放 mock 原型音频");
+    expect(memory?.getAttribute("aria-pressed")).toBe("true");
+    expect(memory?.textContent).toContain("正在播放 mock 原型音频");
+  });
+
+  it("shows a clear user-visible state when prototype audio is missing", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+    const promise = Array.from(app?.querySelectorAll("button") ?? []).find(
+      (button) => button.textContent?.includes("等到春水再涨时")
+    );
+
+    promise?.click();
+    await waitForPrototypeAudio();
+
+    expect(promise?.getAttribute("aria-pressed")).toBe("true");
+    expect(promise?.textContent).toContain("原型音频暂缺");
+    expect(promise?.textContent).toContain("Nushu TTS prototype audio");
   });
 });

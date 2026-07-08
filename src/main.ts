@@ -1,8 +1,14 @@
 import "./styles.css";
 import {
+  mockNushuAudioProvider,
+  prototypeAudioDetail,
+  type AudioProvider
+} from "./experience/audioProvider";
+import {
   defaultNushuStoryExperience,
   type NushuStoryExperience
 } from "./experience/nushuStoryExperience";
+import { createPlaybackSession } from "./experience/playbackSession";
 
 function appendTextElement(
   parent: HTMLElement,
@@ -21,9 +27,11 @@ function appendTextElement(
 
 export function renderExperience(
   container: HTMLElement,
-  experience: NushuStoryExperience = defaultNushuStoryExperience
+  experience: NushuStoryExperience = defaultNushuStoryExperience,
+  audioProvider: AudioProvider = mockNushuAudioProvider
 ) {
   container.replaceChildren();
+  const playbackSession = createPlaybackSession(audioProvider);
 
   const main = document.createElement("main");
   main.className = "app-shell";
@@ -103,26 +111,91 @@ export function renderExperience(
     "story-reader__context",
     experience.story.culturalContext
   );
+  appendTextElement(
+    storyHeader,
+    "p",
+    "story-reader__audio-note",
+    prototypeAudioDetail
+  );
   storySection.append(storyHeader);
 
   const sentenceList = document.createElement("ol");
   sentenceList.className = "sentence-list";
+  const sentenceButtons: HTMLButtonElement[] = [];
+
+  function refreshSentenceButtons() {
+    const snapshot = playbackSession.getSnapshot();
+
+    sentenceButtons.forEach((button) => {
+      const sentenceId = button.dataset.sentenceId ?? "";
+      const isActive = playbackSession.isSentenceActive(sentenceId);
+      const statusElement = button.querySelector<HTMLElement>(
+        ".sentence__audio-status"
+      );
+      const detailElement = button.querySelector<HTMLElement>(
+        ".sentence__audio-detail"
+      );
+
+      button.classList.toggle("sentence--active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      button.dataset.playbackStatus = isActive ? snapshot.status : "idle";
+
+      if (statusElement) {
+        statusElement.textContent = isActive
+          ? snapshot.statusLabel
+          : "点读待命";
+      }
+
+      if (detailElement) {
+        detailElement.textContent = isActive
+          ? snapshot.statusDetail
+          : "点击这句体验 mock 原型音频状态。";
+      }
+    });
+  }
+
   experience.story.sentences.forEach((sentence) => {
     const item = document.createElement("li");
-    item.className = "sentence";
+    item.className = "sentence-list__item";
+
+    const button = document.createElement("button");
+    button.className = "sentence";
+    button.type = "button";
+    button.dataset.sentenceId = sentence.id;
+    button.dataset.playbackStatus = "idle";
+    button.setAttribute("aria-label", `点读：${sentence.zhText}`);
+    button.setAttribute("aria-pressed", "false");
 
     const nushuText = appendTextElement(
-      item,
-      "p",
+      button,
+      "span",
       "sentence__nushu",
       sentence.nushuText
     );
     nushuText.lang = "zh-Nshu";
-    appendTextElement(item, "p", "sentence__zh", sentence.zhText);
-    appendTextElement(item, "p", "sentence__en", sentence.enText);
-    appendTextElement(item, "p", "sentence__note", sentence.culturalNote);
+    appendTextElement(button, "span", "sentence__zh", sentence.zhText);
+    appendTextElement(button, "span", "sentence__en", sentence.enText);
+    appendTextElement(button, "span", "sentence__note", sentence.culturalNote);
+    appendTextElement(button, "span", "sentence__audio-status", "点读待命");
+    appendTextElement(
+      button,
+      "span",
+      "sentence__audio-detail",
+      "点击这句体验 mock 原型音频状态。"
+    );
+
+    button.addEventListener("click", async () => {
+      const playback = playbackSession.selectSentence(sentence.id);
+      refreshSentenceButtons();
+      await playback;
+      refreshSentenceButtons();
+    });
+
+    sentenceButtons.push(button);
+    item.append(button);
     sentenceList.append(item);
   });
+  refreshSentenceButtons();
   storySection.append(sentenceList);
 
   const sourceNote = appendTextElement(
