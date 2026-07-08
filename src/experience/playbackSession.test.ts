@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   mockNushuAudioProvider,
   prototypeAudioDetail,
-  type AudioProvider
+  type AudioProvider,
+  type SentenceAudioState
 } from "./audioProvider";
 import { createPlaybackSession } from "./playbackSession";
 
@@ -25,7 +26,11 @@ describe("Nushu story playback session", () => {
       activeSentenceId: "greeting",
       status: "playing",
       statusLabel: "正在播放示意声音",
-      statusDetail: "女书声音提示：当前为示意声音，后续会替换为正式点读音频。"
+      statusDetail: "女书声音提示：当前为示意声音，后续会替换为正式点读音频。",
+      source: expect.objectContaining({
+        kind: "mock-prototype"
+      }),
+      errorMode: undefined
     });
     expect(session.isSentenceActive("greeting")).toBe(true);
 
@@ -52,13 +57,21 @@ describe("Nushu story playback session", () => {
 
   it("keeps the selected sentence visible when audio is missing", async () => {
     const provider: AudioProvider = {
+      experienceNotice: prototypeAudioDetail,
       async getSentenceAudio(sentenceId) {
         return {
           sentenceId,
           status: "missing",
           statusLabel: "provider 报告声音缺失",
-          statusDetail: prototypeAudioDetail
+          statusDetail: prototypeAudioDetail,
+          errorMode: "not-recorded",
+          evidenceNotice: prototypeAudioDetail
         };
+      },
+      async getStoryAudioStates(story) {
+        return Promise.all(
+          story.sentences.map((sentence) => this.getSentenceAudio(sentence.id))
+        );
       }
     };
     const session = createPlaybackSession(provider);
@@ -69,16 +82,19 @@ describe("Nushu story playback session", () => {
       activeSentenceId: "promise",
       status: "missing",
       statusLabel: "provider 报告声音缺失",
-      statusDetail: prototypeAudioDetail
+      statusDetail: prototypeAudioDetail,
+      source: undefined,
+      errorMode: "not-recorded"
     });
     expect(session.isSentenceActive("promise")).toBe(true);
   });
 
   it("does not let a stale audio response replace a newer selected sentence", async () => {
     let resolveGreeting:
-      | ((value: Awaited<ReturnType<AudioProvider["getSentenceAudio"]>>) => void)
+      | ((value: SentenceAudioState) => void)
       | undefined;
     const provider: AudioProvider = {
+      experienceNotice: prototypeAudioDetail,
       async getSentenceAudio(sentenceId) {
         if (sentenceId === "greeting") {
           return new Promise((resolve) => {
@@ -90,8 +106,18 @@ describe("Nushu story playback session", () => {
           sentenceId,
           status: "ready",
           statusLabel: "正在播放第二句声音",
-          statusDetail: prototypeAudioDetail
+          statusDetail: prototypeAudioDetail,
+          source: {
+            kind: "mock-prototype",
+            description: "第二句示意声音。"
+          },
+          evidenceNotice: prototypeAudioDetail
         };
+      },
+      async getStoryAudioStates(story) {
+        return Promise.all(
+          story.sentences.map((sentence) => this.getSentenceAudio(sentence.id))
+        );
       }
     };
     const session = createPlaybackSession(provider);
@@ -102,7 +128,12 @@ describe("Nushu story playback session", () => {
       sentenceId: "greeting",
       status: "ready",
       statusLabel: "过期的第一句声音",
-      statusDetail: prototypeAudioDetail
+      statusDetail: prototypeAudioDetail,
+      source: {
+        kind: "mock-prototype",
+        description: "第一句示意声音。"
+      },
+      evidenceNotice: prototypeAudioDetail
     });
     await stalePlayback;
 
@@ -111,7 +142,12 @@ describe("Nushu story playback session", () => {
       activeSentenceId: "memory",
       status: "playing",
       statusLabel: "正在播放第二句声音",
-      statusDetail: prototypeAudioDetail
+      statusDetail: prototypeAudioDetail,
+      source: {
+        kind: "mock-prototype",
+        description: "第二句示意声音。"
+      },
+      errorMode: undefined
     });
   });
 });

@@ -91,3 +91,34 @@ provided by a small story-scoped controller that can use browser save/share
 capabilities and ordinary links without requiring accounts, backend storage, or
 community features. This prototype does not lock in a baseline TTS comparison,
 backend, account system, CMS, or real TTS model.
+
+## Audio Provider Contract
+
+The story reader depends on the audio provider interface, not on mock data files
+or future model output paths. For each sentence id, an audio provider returns a
+sentence audio state with one of these statuses:
+
+- `loading`: generation or retrieval has not reached a final result yet
+- `ready`: playable audio is available and includes a playback `source`
+- `missing`: the sentence is known, but audio has not been recorded or generated
+- `failed`: the sentence could not be resolved because of a provider or contract
+  error
+
+The mock provider resolves the current default story to playable states for
+`greeting` and `memory`, and an explicit `missing` state for `promise`. Unknown
+sentence ids fail with the `unknown-sentence` error mode instead of inventing
+audio. The contract validator checks that every story sentence resolves to
+playable audio or an explicit error mode.
+
+Future real TTS adapters must accept `sentenceId`, `nushuText`, `zhText`,
+`voiceProfile`, and `locale`. They must return the same sentence audio state
+shape: sentence id, status, user-facing label and detail, playback source when
+ready, error mode when missing or failed, and an evidence notice. Real adapters
+may also attach timing and metadata for highlighting, caching, or provenance
+without changing the story reader dependency. Supported error modes are
+`not-recorded`, `generation-pending`, `provider-error`, `invalid-source`, and
+`unknown-sentence`.
+
+Mock audio cannot be used as evidence of real model quality in formal user
+research. It only validates sentence-level playback flow, interface boundaries,
+and error handling before the real TTS adapter exists.

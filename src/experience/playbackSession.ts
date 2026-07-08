@@ -1,4 +1,9 @@
-import type { AudioProvider, SentenceAudioStatus } from "./audioProvider";
+import type {
+  AudioProvider,
+  SentenceAudioErrorMode,
+  SentenceAudioSource,
+  SentenceAudioStatus
+} from "./audioProvider";
 
 export type PlaybackStatus = "idle" | "loading" | "playing" | "missing" | "failed";
 
@@ -7,6 +12,8 @@ export interface PlaybackSnapshot {
   status: PlaybackStatus;
   statusLabel: string;
   statusDetail: string;
+  source?: SentenceAudioSource;
+  errorMode?: SentenceAudioErrorMode;
 }
 
 export interface PlaybackSession {
@@ -71,7 +78,9 @@ export function createPlaybackSession(
         activeSentenceId: sentenceId,
         status,
         statusLabel: audio.statusLabel || fallbackLabelByStatus[status],
-        statusDetail: audio.statusDetail
+        statusDetail: audio.statusDetail,
+        source: audio.source,
+        errorMode: audio.errorMode
       };
       return snapshot;
     },

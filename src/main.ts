@@ -1,7 +1,6 @@
 import "./styles.css";
 import {
   mockNushuAudioProvider,
-  prototypeAudioDetail,
   type AudioProvider
 } from "./experience/audioProvider";
 import {
@@ -339,7 +338,7 @@ export function renderExperience(
     storyHeader,
     "p",
     "story-reader__audio-note",
-    prototypeAudioDetail
+    audioProvider.experienceNotice
   );
   storySection.append(storyHeader);
 

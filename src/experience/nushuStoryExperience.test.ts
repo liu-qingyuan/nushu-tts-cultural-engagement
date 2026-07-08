@@ -155,7 +155,7 @@ describe("default Nushu story experience", () => {
       (button) => button.textContent?.includes("远方的姐妹")
     );
 
-    expect(app?.textContent).toContain("女书声音提示");
+    expect(app?.textContent).toContain("不能作为正式研究中的模型效果证据");
     expect(greeting).toBeDefined();
 
     greeting?.click();
