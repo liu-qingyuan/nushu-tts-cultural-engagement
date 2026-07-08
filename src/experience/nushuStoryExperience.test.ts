@@ -291,17 +291,30 @@ describe("default Nushu story experience", () => {
     const app = document.querySelector<HTMLElement>("#app");
     renderExperience(app as HTMLElement);
     enterStoryExperience(app);
+    completeStoryExperience(app);
 
-    const save = findButtonByText(app, "保存这段故事");
-    const share = findButtonByText(app, "分享给朋友");
+    expect(app?.textContent).toContain("研究阶段：体验后反馈");
+    expect(app?.querySelector<HTMLElement>(".completion-panel")?.hidden).toBe(
+      true
+    );
+
+    selectRating(app, "postFamiliarity", 4);
+    selectRating(app, "postInterest", 5);
+    selectRating(app, "postParticipationIntent", 3);
+    findButtonByText(app, "Submit reflection")?.click();
+    await waitForFeedbackSubmission();
+
+    const save = findButtonByText(app, "Save reading card");
+    const share = findButtonByText(app, "Share this experience");
     const learnMore = app?.querySelector<HTMLAnchorElement>(
       'a[href="https://courier.unesco.org/en/articles/nushu-tears-sunshine"]'
     );
 
-    expect(app?.textContent).toContain("继续参与");
+    expect(app?.textContent).toContain("研究阶段：流程已完成");
+    expect(app?.textContent).toContain("Carry the story forward");
     expect(save).toBeDefined();
     expect(share).toBeDefined();
-    expect(learnMore?.textContent).toContain("了解更多女书资料");
+    expect(learnMore?.textContent).toContain("Learn more about Nushu");
 
     save?.click();
     expect(save?.textContent).toContain("已保存这段故事");
@@ -357,6 +370,7 @@ describe("default Nushu story experience", () => {
       ".feedback-submit"
     );
 
+    expect(submit?.disabled).toBe(true);
     selectRating(app, "postFamiliarity", 4);
     selectRating(app, "postInterest", 5);
     selectRating(app, "postParticipationIntent", 5);
@@ -364,6 +378,7 @@ describe("default Nushu story experience", () => {
       comment.value = "I understand why Nushu voice matters after the story.";
       comment.dispatchEvent(new Event("input", { bubbles: true }));
     }
+    expect(submit?.disabled).toBe(false);
     submit?.click();
     await waitForFeedbackSubmission();
 
@@ -381,6 +396,65 @@ describe("default Nushu story experience", () => {
     });
     expect(submittedRecords[0]?.submittedAt).toEqual(expect.any(String));
     expect(app?.textContent).toContain("研究阶段：流程已完成");
-    expect(app?.textContent).toContain("流程已完成");
+    expect(app?.textContent).toContain("Carry the story forward");
+    expect(app?.textContent).toContain("不代表正式研究结论");
+  });
+
+  it("keeps feedback editable after a failed submit and then completes on retry", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+    let attempts = 0;
+    const feedbackSubmitter: FeedbackSubmitter = {
+      async submitFeedback(record) {
+        attempts += 1;
+
+        if (attempts === 1) {
+          throw new Error("temporary failure");
+        }
+
+        return {
+          recordId: `retry-feedback-${attempts}`,
+          submittedAt: record.submittedAt
+        };
+      }
+    };
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(
+      app as HTMLElement,
+      defaultNushuStoryExperience,
+      mockNushuAudioProvider,
+      feedbackSubmitter
+    );
+
+    enterStoryExperience(app);
+    completeStoryExperience(app);
+    selectRating(app, "postFamiliarity", 4);
+    selectRating(app, "postInterest", 4);
+    selectRating(app, "postParticipationIntent", 4);
+    const comment = app?.querySelector<HTMLTextAreaElement>(
+      'textarea[name="openComment"]'
+    );
+    const submit = app?.querySelector<HTMLButtonElement>(".feedback-submit");
+
+    submit?.click();
+    await waitForFeedbackSubmission();
+
+    expect(app?.textContent).toContain("反馈暂时无法记录");
+    expect(app?.textContent).toContain("请修改后重试");
+
+    if (comment) {
+      comment.value = "Retry after clarifying my reflection.";
+      comment.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    expect(app?.textContent).toContain("反馈已修改，可以再次提交");
+
+    submit?.click();
+    await waitForFeedbackSubmission();
+
+    expect(attempts).toBe(2);
+    expect(app?.textContent).toContain("研究阶段：流程已完成");
+    expect(app?.textContent).toContain("Carry the story forward");
   });
 });

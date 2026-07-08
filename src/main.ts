@@ -251,29 +251,29 @@ export function renderExperience(
     {
       name: "postFamiliarity",
       key: "familiarity",
-      label: "体验后了解程度",
-      english: "Familiarity",
+      label: "理解程度",
+      english: "Understanding",
       hint: "故事、翻译和文化说明是否帮助你理解女书语境？",
-      lowLabel: "帮助有限",
-      highLabel: "非常清楚"
+      lowLabel: "Not at all",
+      highLabel: "Very well"
     },
     {
       name: "postInterest",
       key: "interest",
-      label: "体验后兴趣",
+      label: "兴趣程度",
       english: "Interest",
       hint: "这段体验是否提升了你继续了解女书和 TTS 的兴趣？",
-      lowLabel: "没有变化",
-      highLabel: "更想了解"
+      lowLabel: "Not interested",
+      highLabel: "Very interested"
     },
     {
       name: "postParticipationIntent",
       key: "participationIntent",
-      label: "体验后继续探索意愿",
-      english: "Participation intent",
+      label: "未来参与意愿",
+      english: "Join later",
       hint: "体验后你是否更愿意参与后续研究或文化行动？",
-      lowLabel: "暂不参与",
-      highLabel: "愿意参与"
+      lowLabel: "Not likely",
+      highLabel: "Very likely"
     }
   ] as const;
 
@@ -687,109 +687,6 @@ export function renderExperience(
   );
   sourceNote.setAttribute("aria-label", "来源和改写标注");
 
-  const participationSection = document.createElement("section");
-  participationSection.className = "participation-actions";
-  participationSection.setAttribute("aria-labelledby", "participation-title");
-
-  const participationHeader = document.createElement("div");
-  participationHeader.className = "participation-actions__header";
-  appendTextElement(
-    participationHeader,
-    "p",
-    "eyebrow",
-    "文化参与 / Cultural Engagement"
-  );
-  const participationTitle = appendTextElement(
-    participationHeader,
-    "h3",
-    "",
-    "继续参与"
-  );
-  participationTitle.id = "participation-title";
-  appendTextElement(
-    participationHeader,
-    "p",
-    "participation-actions__intro",
-    "保存这段故事、分享给朋友，或继续阅读女书文化资料。"
-  );
-  participationSection.append(participationHeader);
-
-  const participationGrid = document.createElement("div");
-  participationGrid.className = "participation-actions__grid";
-
-  const participationStatus = appendTextElement(
-    participationSection,
-    "p",
-    "participation-actions__status",
-    "选择一个参与行动后，这里会显示结果。"
-  );
-  participationStatus.setAttribute("role", "status");
-  participationStatus.setAttribute("aria-live", "polite");
-
-  const saveStory = document.createElement("button");
-  saveStory.className = "participation-action";
-  saveStory.type = "button";
-  let storySaved = participationActionController.isStorySaved();
-
-  function refreshSavedStoryState() {
-    saveStory.textContent = storySaved
-      ? participationActions.save.savedLabel
-      : participationActions.save.label;
-    saveStory.setAttribute("aria-pressed", String(storySaved));
-  }
-
-  saveStory.addEventListener("click", () => {
-    storySaved = true;
-    const result = participationActionController.saveStory();
-    refreshSavedStoryState();
-    participationStatus.textContent = result.status;
-  });
-  refreshSavedStoryState();
-  participationGrid.append(saveStory);
-
-  const shareStory = document.createElement("button");
-  shareStory.className = "participation-action";
-  shareStory.type = "button";
-  shareStory.textContent = participationActions.share.label;
-
-  const shareLink = document.createElement("input");
-  shareLink.className = "participation-actions__share-link";
-  shareLink.name = "storyShareLink";
-  shareLink.type = "text";
-  shareLink.readOnly = true;
-  shareLink.value = participationActions.share.url;
-  shareLink.setAttribute("aria-label", "可复制的故事分享链接");
-
-  shareStory.addEventListener("click", async () => {
-    const result = await participationActionController.shareStory();
-    participationStatus.textContent = result.status;
-
-    if (result.shouldSelectShareLink) {
-      shareLink.focus();
-      shareLink.select();
-    }
-  });
-  participationGrid.append(shareStory);
-
-  const learnMore = document.createElement("a");
-  learnMore.className = "participation-action participation-action--link";
-  learnMore.href = participationActions.learnMore.href;
-  learnMore.target = "_blank";
-  learnMore.rel = "noopener noreferrer";
-  learnMore.textContent = participationActions.learnMore.label;
-  learnMore.setAttribute(
-    "aria-label",
-    `${participationActions.learnMore.label}：${participationActions.learnMore.description}`
-  );
-  learnMore.addEventListener("click", () => {
-    const result = participationActionController.openLearnMore();
-    participationStatus.textContent = result.status;
-  });
-  participationGrid.append(learnMore);
-
-  participationSection.append(participationGrid, shareLink);
-  storySection.append(participationSection);
-
   const storyComplete = document.createElement("button");
   storyComplete.className = "stage-action";
   storyComplete.type = "button";
@@ -813,16 +710,19 @@ export function renderExperience(
     feedbackHeader,
     "h2",
     "",
-    "体验后反馈"
+    "After listening"
   );
   feedbackTitle.id = "feedback-title";
+  appendTextElement(feedbackHeader, "p", "feedback-panel__subtitle", "听过之后");
   appendTextElement(
     feedbackHeader,
     "p",
     "feedback-panel__intro",
-    "请用 1-5 分记录体验后对女书的了解程度、兴趣和继续探索意愿。开放评论可选，会与评分一起形成研究记录。"
+    "每一次聆听，都会在心里留下痕迹。请用 1-5 分记录体验后的理解、兴趣和继续探索意愿；开放评论可选，会与评分一起形成轻量研究记录。"
   );
-  feedbackSection.append(feedbackHeader);
+
+  const feedbackLayout = document.createElement("div");
+  feedbackLayout.className = "feedback-panel__layout";
 
   const form = document.createElement("form");
   form.className = "feedback-form";
@@ -835,13 +735,20 @@ export function renderExperience(
     form,
     "label",
     "open-comment",
-    "开放评论（可选）"
+    "What changed for you?  什么改变了你？"
   );
   const comment = document.createElement("textarea");
   comment.name = "openComment";
   comment.rows = 4;
-  comment.placeholder = "可以写下你对故事、声音体验或参与研究的想法。";
+  comment.maxLength = 400;
+  comment.placeholder = "Share a thought, a feeling, or a new perspective...";
   commentLabel.append(comment);
+  const commentCounter = appendTextElement(
+    commentLabel,
+    "span",
+    "open-comment__counter",
+    "0 / 400"
+  );
 
   const status = appendTextElement(
     form,
@@ -856,8 +763,56 @@ export function renderExperience(
   submit.className = "feedback-submit";
   submit.type = "submit";
   submit.disabled = true;
-  submit.textContent = "提交反馈";
+  submit.textContent = "Submit reflection  提交反思";
   form.append(submit);
+
+  const feedbackSummary = document.createElement("aside");
+  feedbackSummary.className = "feedback-summary";
+  feedbackSummary.setAttribute("aria-label", "体验后反馈状态摘要");
+  appendTextElement(feedbackSummary, "p", "feedback-summary__step", "4 / 5 · Reflection");
+  appendTextElement(feedbackSummary, "h3", "", "What shifted after listening");
+  appendTextElement(feedbackSummary, "p", "feedback-summary__zh", "听过之后，哪些变化");
+  appendTextElement(
+    feedbackSummary,
+    "p",
+    "feedback-summary__copy",
+    "The record below compares your before-reading note with your after-listening response. It is a session record, not a formal research conclusion."
+  );
+
+  const feedbackCompare = document.createElement("dl");
+  feedbackCompare.className = "feedback-compare";
+  [
+    ["Emotional connection", "情感共鸣"],
+    ["Cultural understanding", "文化理解"],
+    ["Inspiration to act", "行动启发"]
+  ].forEach(([label, zh]) => {
+    const item = document.createElement("div");
+    item.className = "feedback-compare__item";
+    const term = appendTextElement(item, "dt", "", label);
+    appendTextElement(term, "span", "", zh);
+    const detail = document.createElement("dd");
+    appendTextElement(detail, "span", "feedback-compare__before", "Before 听之前");
+    appendTextElement(detail, "span", "feedback-compare__arrow", "→");
+    appendTextElement(detail, "span", "feedback-compare__after", "After 听之后");
+    item.append(detail);
+    feedbackCompare.append(item);
+  });
+  feedbackSummary.append(feedbackCompare);
+
+  const returnToStory = document.createElement("button");
+  returnToStory.className = "feedback-summary__return";
+  returnToStory.type = "button";
+  returnToStory.textContent = "Return to story  返回故事";
+  returnToStory.addEventListener("click", () => {
+    storySection.hidden = false;
+    feedbackSection.hidden = true;
+    journeyStatus.textContent = "研究阶段：默认女书故事体验";
+    storySection.scrollIntoView({ block: "start" });
+  });
+  feedbackSummary.append(returnToStory);
+
+  feedbackLayout.append(form, feedbackSummary);
+  feedbackSection.append(feedbackHeader, feedbackLayout);
 
   function refreshFlowSections() {
     const snapshot = researchFlow.getSnapshot();
@@ -918,6 +873,17 @@ export function renderExperience(
       return;
     }
 
+    if (form.dataset.feedbackStatus === "failed") {
+      const snapshot = researchFlow.updatePostExperience(
+        readScaleInput(form, postRatingGroups)
+      );
+      submit.disabled = !snapshot.canAdvance;
+      status.textContent = snapshot.canAdvance
+        ? "反馈已修改，可以再次提交。"
+        : "完成三项评分后即可提交。";
+      return;
+    }
+
     refreshFeedbackState();
   }
 
@@ -928,6 +894,9 @@ export function renderExperience(
     input.addEventListener("change", refreshSubmittedFeedbackState);
   });
   comment.addEventListener("input", refreshSubmittedFeedbackState);
+  comment.addEventListener("input", () => {
+    commentCounter.textContent = `${comment.value.length} / 400`;
+  });
 
   preForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -985,32 +954,159 @@ export function renderExperience(
       });
       refreshFlowSections();
     } catch {
-      form.dataset.feedbackStatus = "ready";
+      form.dataset.feedbackStatus = "failed";
       submit.disabled = false;
-      status.textContent = "反馈暂时无法记录，请稍后重试。";
+      status.textContent = "反馈暂时无法记录，请修改后重试或稍后再提交。";
     }
   });
 
-  feedbackSection.append(form);
   main.append(feedbackSection);
 
   const completeSection = document.createElement("section");
   completeSection.className = "completion-panel";
   completeSection.setAttribute("aria-labelledby", "completion-title");
-  appendTextElement(completeSection, "p", "eyebrow", "Research Record Ready");
+  appendTextElement(completeSection, "p", "eyebrow", "5 of 5 · Exhibition complete");
   const completionTitle = appendTextElement(
     completeSection,
     "h2",
     "",
-    "流程已完成"
+    "Carry the story forward"
   );
   completionTitle.id = "completion-title";
+  appendTextElement(completeSection, "p", "completion-panel__subtitle", "把这个故事带给更多人");
   appendTextElement(
     completeSection,
     "p",
     "completion-panel__summary",
-    "体验前记录、故事完成状态和体验后反馈已经形成一条轻量研究记录，适合继续访谈或实验记录。"
+    "你的阅读和反思已保存为本次会话的一条轻量研究记录。它说明一次体验已经完成，但不代表正式研究结论。"
   );
+
+  const participationSection = document.createElement("section");
+  participationSection.className = "participation-actions";
+  participationSection.setAttribute("aria-labelledby", "participation-title");
+
+  const participationTitle = appendTextElement(
+    participationSection,
+    "h3",
+    "",
+    "继续参与"
+  );
+  participationTitle.id = "participation-title";
+
+  const participationGrid = document.createElement("div");
+  participationGrid.className = "participation-actions__grid";
+
+  const participationStatus = appendTextElement(
+    participationSection,
+    "p",
+    "participation-actions__status",
+    "Your reading and reflection are saved for this session."
+  );
+  participationStatus.setAttribute("role", "status");
+  participationStatus.setAttribute("aria-live", "polite");
+
+  function appendActionCopy(parent: HTMLElement, title: string, copy: string) {
+    const body = document.createElement("span");
+    body.className = "participation-action__body";
+    appendTextElement(body, "span", "participation-action__title", title);
+    appendTextElement(body, "span", "participation-action__copy", copy);
+    parent.append(body);
+  }
+
+  const saveStory = document.createElement("button");
+  saveStory.className = "participation-action participation-action--save";
+  saveStory.type = "button";
+  appendTextElement(saveStory, "span", "participation-action__icon", "⇩");
+  appendActionCopy(
+    saveStory,
+    "Save reading card",
+    "保存你的阅读卡，留存你的思考与感悟。"
+  );
+  appendTextElement(saveStory, "span", "participation-action__arrow", "→");
+  let storySaved = participationActionController.isStorySaved();
+
+  function refreshSavedStoryState() {
+    const title = saveStory.querySelector<HTMLElement>(
+      ".participation-action__title"
+    );
+    if (title) {
+      title.textContent = storySaved
+        ? participationActions.save.savedLabel
+        : "Save reading card";
+    }
+    saveStory.setAttribute("aria-pressed", String(storySaved));
+  }
+
+  saveStory.addEventListener("click", () => {
+    storySaved = true;
+    const result = participationActionController.saveStory();
+    refreshSavedStoryState();
+    participationStatus.textContent = result.status;
+  });
+  refreshSavedStoryState();
+  participationGrid.append(saveStory);
+
+  const shareStory = document.createElement("button");
+  shareStory.className = "participation-action participation-action--share";
+  shareStory.type = "button";
+  appendTextElement(shareStory, "span", "participation-action__icon", "↗");
+  appendActionCopy(
+    shareStory,
+    "Share this experience",
+    "分享女书的故事，让更多人了解这份文化遗产。"
+  );
+  appendTextElement(shareStory, "span", "participation-action__arrow", "→");
+
+  const shareLink = document.createElement("input");
+  shareLink.className = "participation-actions__share-link";
+  shareLink.name = "storyShareLink";
+  shareLink.type = "text";
+  shareLink.readOnly = true;
+  shareLink.hidden = true;
+  shareLink.value = participationActions.share.url;
+  shareLink.setAttribute("aria-label", "可复制的故事分享链接");
+
+  shareStory.addEventListener("click", async () => {
+    const result = await participationActionController.shareStory();
+    participationStatus.textContent = result.status;
+
+    if (result.shouldSelectShareLink) {
+      shareLink.hidden = false;
+      shareLink.focus();
+      shareLink.select();
+    }
+  });
+  participationGrid.append(shareStory);
+
+  const learnMore = document.createElement("a");
+  learnMore.className = "participation-action participation-action--learn";
+  learnMore.href = participationActions.learnMore.href;
+  learnMore.target = "_blank";
+  learnMore.rel = "noopener noreferrer";
+  appendTextElement(learnMore, "span", "participation-action__icon", "□");
+  appendActionCopy(
+    learnMore,
+    "Learn more about Nushu",
+    "探索更多文章、研究与资源，深入了解女书文化。"
+  );
+  appendTextElement(learnMore, "span", "participation-action__arrow", "→");
+  learnMore.setAttribute(
+    "aria-label",
+    `${participationActions.learnMore.label}：${participationActions.learnMore.description}`
+  );
+  learnMore.addEventListener("click", () => {
+    const result = participationActionController.openLearnMore();
+    participationStatus.textContent = result.status;
+  });
+  participationGrid.append(learnMore);
+
+  participationSection.append(participationGrid, shareLink);
+  completeSection.append(participationSection);
+  const privacyNote = document.createElement("p");
+  privacyNote.className = "completion-panel__privacy";
+  privacyNote.textContent =
+    "We respect your privacy. No personal data is collected. 本项目致力于文化保护与学术研究。";
+  completeSection.append(privacyNote);
   main.append(completeSection);
 
   refreshFlowSections();
