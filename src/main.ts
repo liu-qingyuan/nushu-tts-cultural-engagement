@@ -52,7 +52,6 @@ export function renderExperience(
 
   const preview = document.createElement("div");
   preview.className = "story-preview";
-  preview.id = "experience-preview";
   preview.setAttribute("aria-label", experience.name);
 
   const visual = document.createElement("div");
@@ -65,17 +64,75 @@ export function renderExperience(
 
   const previewBody = document.createElement("div");
   appendTextElement(previewBody, "p", "preview-kicker", experience.audience);
-  appendTextElement(previewBody, "h2", "", "默认故事入口占位");
+  appendTextElement(previewBody, "h2", "", experience.story.title);
   appendTextElement(
     previewBody,
     "p",
     "",
-    "这里将在后续切片承载女书文本、转写、翻译和音频体验。当前版本只固定用户可见旅程，不提前绑定内容源或模型服务。"
+    "打开页面即可阅读默认女书故事。本切片聚焦结构化故事、翻译、文化说明和来源标注。"
   );
   preview.append(previewBody);
 
   hero.append(content, preview);
   main.append(hero);
+
+  const storySection = document.createElement("section");
+  storySection.className = "story-reader";
+  storySection.id = "experience-preview";
+  storySection.setAttribute("aria-labelledby", "story-title");
+
+  const storyHeader = document.createElement("div");
+  storyHeader.className = "story-reader__header";
+  appendTextElement(storyHeader, "p", "eyebrow", "Default Nushu Story");
+  const storyTitle = appendTextElement(
+    storyHeader,
+    "h2",
+    "",
+    experience.story.title
+  );
+  storyTitle.id = "story-title";
+  appendTextElement(
+    storyHeader,
+    "p",
+    "story-reader__subtitle",
+    experience.story.subtitle
+  );
+  appendTextElement(
+    storyHeader,
+    "p",
+    "story-reader__context",
+    experience.story.culturalContext
+  );
+  storySection.append(storyHeader);
+
+  const sentenceList = document.createElement("ol");
+  sentenceList.className = "sentence-list";
+  experience.story.sentences.forEach((sentence) => {
+    const item = document.createElement("li");
+    item.className = "sentence";
+
+    const nushuText = appendTextElement(
+      item,
+      "p",
+      "sentence__nushu",
+      sentence.nushuText
+    );
+    nushuText.lang = "zh-Nshu";
+    appendTextElement(item, "p", "sentence__zh", sentence.zhText);
+    appendTextElement(item, "p", "sentence__en", sentence.enText);
+    appendTextElement(item, "p", "sentence__note", sentence.culturalNote);
+    sentenceList.append(item);
+  });
+  storySection.append(sentenceList);
+
+  const sourceNote = appendTextElement(
+    storySection,
+    "p",
+    "source-note",
+    experience.story.sourceNote
+  );
+  sourceNote.setAttribute("aria-label", "来源和改写标注");
+  main.append(storySection);
   container.append(main);
 }
 

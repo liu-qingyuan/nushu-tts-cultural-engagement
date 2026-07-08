@@ -1,3 +1,5 @@
+import { getDefaultStory, type NushuStory } from "./storyContent";
+
 export interface ResearchJourneyEntry {
   eyebrow: string;
   title: string;
@@ -10,6 +12,7 @@ export interface NushuStoryExperience {
   name: string;
   audience: string;
   entry: ResearchJourneyEntry;
+  story: NushuStory;
 }
 
 export const defaultNushuStoryExperience: NushuStoryExperience = {
@@ -23,7 +26,8 @@ export const defaultNushuStoryExperience: NushuStoryExperience = {
     primaryActionLabel: "开始默认体验",
     studyPromise:
       "本阶段不收集账号、不连接后端，也不预设普通 TTS baseline 或真实模型。"
-  }
+  },
+  story: getDefaultStory()
 };
 
 export function getVisibleJourneyEntry(

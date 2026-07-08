@@ -37,8 +37,8 @@ Keep the first version narrow:
 
 ## Local Prototype
 
-This repository now includes a responsive web prototype shell for the top-level
-Nushu story experience.
+This repository now includes a responsive web prototype for the top-level Nushu
+story experience.
 
 ```bash
 npm install
@@ -61,13 +61,15 @@ npm run check
 
 The current implementation treats “女书故事体验” as a user-visible research
 journey, not as a layout or file structure. Its public model describes the
-participant-facing entry point:
+participant-facing entry point and the default structured story:
 
 - a default research entry shown to participants
 - a single “start default experience” action
 - a study note that makes the prototype boundary explicit
+- a default story with stable sentence ids, Nushu text, Chinese explanation,
+  English support text, cultural notes, and source/adaptation labeling
 
-The story content, audio provider, and feedback collector seams are reserved in
-the issue architecture diagram for later slices; they are not participant UI or
-public model fields in this first shell. This first shell does not lock in a
-baseline TTS comparison, backend, account system, CMS, or real TTS model.
+The story content is currently provided by a local structured data adapter
+behind the story content interface. Audio provider and feedback collector seams
+remain reserved for later slices. This prototype does not lock in a baseline TTS
+comparison, backend, account system, CMS, or real TTS model.
