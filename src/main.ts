@@ -828,11 +828,16 @@ export function renderExperience(
     completeSection.hidden = snapshot.phase !== "complete";
   }
 
+  function scrollStageIntoView(section: HTMLElement) {
+    section.scrollIntoView?.({ block: "start" });
+  }
+
   function refreshPreState() {
     const snapshot = researchFlow.updatePreExperience(
       readScaleInput(preForm, preRatingGroups)
     );
     preSubmit.disabled = !snapshot.canAdvance;
+    preSubmit.classList.toggle("primary-action--ready", snapshot.canAdvance);
     preForm.dataset.researchStatus = snapshot.canAdvance ? "ready" : "empty";
     preStatus.textContent = snapshot.canAdvance
       ? "可以进入默认女书故事体验。"
@@ -909,12 +914,14 @@ export function renderExperience(
 
     researchFlow.submitPreExperience(input);
     refreshFlowSections();
+    scrollStageIntoView(storySection);
   });
 
   storyComplete.addEventListener("click", () => {
     researchFlow.markStoryComplete();
     refreshFlowSections();
     refreshFeedbackState();
+    scrollStageIntoView(feedbackSection);
   });
 
   form.addEventListener("submit", async (event) => {
@@ -953,6 +960,7 @@ export function renderExperience(
         feedbackRecordId: result.recordId
       });
       refreshFlowSections();
+      scrollStageIntoView(completeSection);
     } catch {
       form.dataset.feedbackStatus = "failed";
       submit.disabled = false;

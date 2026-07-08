@@ -2063,6 +2063,7 @@ h1 {
   }
 
   .feedback-form {
+    grid-row: auto;
     transform: none;
   }
 
@@ -2094,9 +2095,9 @@ h1 {
   .hero {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    min-height: auto;
+    min-height: 100dvh;
     align-items: start;
-    padding: 0 22px 48px;
+    padding: max(12px, env(safe-area-inset-top)) 22px max(42px, env(safe-area-inset-bottom));
   }
 
   .hero::before {
@@ -2110,6 +2111,7 @@ h1 {
     grid-template-columns: 1fr auto;
     gap: 16px;
     min-height: 64px;
+    border-bottom-color: rgba(105, 82, 55, 0.12);
   }
 
   .hero-nav {
@@ -2121,13 +2123,31 @@ h1 {
   }
 
   .hero__content {
-    padding-top: 38px;
+    padding-top: clamp(34px, 9vh, 76px);
     padding-bottom: 0;
   }
 
   h1 {
     max-width: 12ch;
-    font-size: 4rem;
+    font-size: clamp(3.4rem, 16vw, 4.7rem);
+  }
+
+  .hero__subtitle {
+    font-size: clamp(1.42rem, 7vw, 2rem);
+  }
+
+  .hero__summary {
+    max-width: 26rem;
+    font-size: 1.04rem;
+  }
+
+  .hero .primary-action {
+    width: 100%;
+    min-height: 66px;
+    border-color: var(--accent);
+    background: var(--accent);
+    font-size: 1.22rem;
+    box-shadow: 0 18px 34px rgba(116, 48, 36, 0.22);
   }
 
   .story-preview {
@@ -2145,13 +2165,24 @@ h1 {
   }
 
   .story-preview__body {
+    display: none;
     padding: 16px 0 0 16px;
     writing-mode: horizontal-tb;
   }
 
   .pre-panel {
     grid-template-columns: 1fr;
-    padding: 56px 22px 68px 66px;
+    padding: 58px 22px max(72px, calc(env(safe-area-inset-bottom) + 54px));
+  }
+
+  .pre-panel::before,
+  .pre-panel::after {
+    display: none;
+  }
+
+  .pre-panel__header {
+    justify-self: center;
+    text-align: center;
   }
 
   .completion-panel {
@@ -2173,7 +2204,7 @@ h1 {
 
   .pre-panel h2,
   .completion-panel h2 {
-    font-size: 2.35rem;
+    font-size: clamp(2.2rem, 10vw, 3.15rem);
   }
 
   .completion-panel h2 {
@@ -2181,10 +2212,7 @@ h1 {
   }
 
   .pre-artifact {
-    grid-template-columns: 1fr auto;
-    min-height: 180px;
-    padding: 24px 20px;
-    transform: none;
+    display: none;
   }
 
   .pre-artifact__glyphs {
@@ -2193,12 +2221,36 @@ h1 {
 
   .pre-panel .research-form {
     grid-template-columns: 1fr;
-    gap: 26px;
+    gap: 30px;
+    margin-top: 8px;
   }
 
   .pre-panel .research-form__status,
   .pre-panel .primary-action {
     grid-column: 1 / -1;
+  }
+
+  .pre-panel .primary-action,
+  .feedback-submit,
+  .stage-action {
+    min-height: 62px;
+    font-size: 1.12rem;
+  }
+
+  .pre-panel .primary-action,
+  .feedback-submit {
+    position: sticky;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 4;
+  }
+
+  .story-reader {
+    padding: 58px 22px max(76px, calc(env(safe-area-inset-bottom) + 64px));
+  }
+
+  .story-reader__header {
+    justify-self: center;
+    text-align: center;
   }
 
   .reader-desk {
@@ -2295,8 +2347,14 @@ h1 {
   }
 
   .reader-desk__aside {
-    grid-template-columns: 1fr;
-    padding: 24px 22px;
+    display: none;
+  }
+
+  .stage-action {
+    position: sticky;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 5;
+    justify-self: stretch;
   }
 
   .participation-actions__grid {
@@ -2326,16 +2384,14 @@ h1 {
   .feedback-form {
     grid-template-columns: 1fr;
     min-height: 0;
-    padding: 30px 24px 34px;
+    gap: 30px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .feedback-form::before {
-    grid-column: 1;
-    grid-row: auto;
-    padding: 0 0 20px;
-    border-right: 0;
-    border-bottom: 1px solid rgba(105, 82, 55, 0.2);
-    content: "Your reflection\A你的感受\A\A记录这次聆听之后，理解、兴趣和行动意愿有哪些变化。";
+    display: none;
   }
 
   .rating-group,
@@ -2346,34 +2402,55 @@ h1 {
   }
 
   .rating-group {
-    padding-bottom: 28px;
+    gap: 8px;
+    padding-bottom: 26px;
   }
 
   .rating-group__legend {
     display: grid;
-    gap: 3px;
+    gap: 2px;
   }
 
   .rating-group__label {
-    font-size: 1.45rem;
+    font-size: 1.05rem;
   }
 
   .rating-group__english {
-    font-size: 2rem;
-    line-height: 1.1;
+    color: var(--ink);
+    font-size: 1.36rem;
+    line-height: 1.16;
   }
 
   .rating-options {
-    min-height: 78px;
+    min-height: 64px;
   }
 
   .rating-options::before {
-    top: 48px;
+    top: 40px;
   }
 
   .rating-option__value {
-    min-height: 70px;
-    font-size: 1.45rem;
+    min-height: 58px;
+    font-size: 1.18rem;
+  }
+
+  .rating-option__value::after {
+    bottom: 8px;
+    height: 18px;
+  }
+
+  .rating-group__hint {
+    font-size: 0.9rem;
+  }
+
+  .feedback-panel__intro {
+    display: none;
+  }
+
+  .open-comment textarea {
+    min-height: 156px;
+    border-radius: 6px;
+    background: rgba(255, 250, 240, 0.58);
   }
 
   .feedback-summary {
@@ -2383,7 +2460,7 @@ h1 {
 
 @media (max-width: 520px) {
   .hero {
-    padding: 0 18px 42px;
+    padding: max(12px, env(safe-area-inset-top)) 18px max(42px, env(safe-area-inset-bottom));
   }
 
   .brand-mark__name {
@@ -2408,12 +2485,12 @@ h1 {
 
   h1 {
     max-width: 100%;
-    font-size: 2.55rem;
-    line-height: 1.08;
+    font-size: clamp(2.7rem, 14vw, 3.55rem);
+    line-height: 1.02;
   }
 
   .story-reader {
-    padding: 52px 18px 64px;
+    padding: 52px 18px max(74px, calc(env(safe-area-inset-bottom) + 62px));
   }
 
   .reader-desk {
@@ -2436,7 +2513,7 @@ h1 {
   }
 
   .pre-panel {
-    padding: 52px 18px 64px 58px;
+    padding: 52px 18px max(74px, calc(env(safe-area-inset-bottom) + 62px));
   }
 
   .completion-panel {
@@ -2512,7 +2589,8 @@ h1 {
   }
 
   .rating-option__value {
-    min-height: 58px;
+    min-height: 54px;
+    font-size: 1.08rem;
   }
 
   .primary-action,
@@ -2546,4 +2624,11 @@ h1 {
     padding-right: 0;
     padding-left: 0;
   }
+}
+
+.pre-panel .primary-action.primary-action--ready {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--surface);
+  box-shadow: 0 16px 32px rgba(116, 48, 36, 0.2);
 }
