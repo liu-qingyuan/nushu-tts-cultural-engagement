@@ -8,6 +8,11 @@ import {
   defaultNushuStoryExperience,
   type NushuStoryExperience
 } from "./experience/nushuStoryExperience";
+import {
+  createMemoryFeedbackSubmitter,
+  type FeedbackRecord,
+  type FeedbackSubmitter
+} from "./experience/feedbackSubmission";
 import { createPlaybackSession } from "./experience/playbackSession";
 
 function appendTextElement(
@@ -28,7 +33,8 @@ function appendTextElement(
 export function renderExperience(
   container: HTMLElement,
   experience: NushuStoryExperience = defaultNushuStoryExperience,
-  audioProvider: AudioProvider = mockNushuAudioProvider
+  audioProvider: AudioProvider = mockNushuAudioProvider,
+  feedbackSubmitter: FeedbackSubmitter = createMemoryFeedbackSubmitter()
 ) {
   container.replaceChildren();
   const playbackSession = createPlaybackSession(audioProvider);
@@ -206,6 +212,214 @@ export function renderExperience(
   );
   sourceNote.setAttribute("aria-label", "来源和改写标注");
   main.append(storySection);
+
+  const feedbackSection = document.createElement("section");
+  feedbackSection.className = "feedback-panel";
+  feedbackSection.setAttribute("aria-labelledby", "feedback-title");
+
+  const feedbackHeader = document.createElement("div");
+  feedbackHeader.className = "feedback-panel__header";
+  appendTextElement(feedbackHeader, "p", "eyebrow", "Post-Experience Feedback");
+  const feedbackTitle = appendTextElement(
+    feedbackHeader,
+    "h2",
+    "",
+    "体验后反馈"
+  );
+  feedbackTitle.id = "feedback-title";
+  appendTextElement(
+    feedbackHeader,
+    "p",
+    "feedback-panel__intro",
+    "请用 1-5 分记录这段故事体验对兴趣、理解和参与意愿的影响。开放评论可选，会与评分一起形成研究记录。"
+  );
+  feedbackSection.append(feedbackHeader);
+
+  const form = document.createElement("form");
+  form.className = "feedback-form";
+  form.dataset.feedbackStatus = "empty";
+
+  const ratingGroups = [
+    {
+      name: "interestLift",
+      label: "兴趣提升",
+      hint: "这段体验是否提升了你继续了解女书和 TTS 的兴趣？"
+    },
+    {
+      name: "understandingSupport",
+      label: "理解支持",
+      hint: "故事、翻译和文化说明是否帮助你理解女书语境？"
+    },
+    {
+      name: "participationIntent",
+      label: "参与意愿",
+      hint: "体验后你是否更愿意参与后续研究或文化行动？"
+    }
+  ] as const;
+
+  const ratingInputs: HTMLInputElement[] = [];
+
+  function getSelectedRating(name: string) {
+    const selected = form.querySelector<HTMLInputElement>(
+      `input[name="${name}"]:checked`
+    );
+    return selected ? Number(selected.value) : null;
+  }
+
+  function hasCompleteRatings() {
+    return ratingGroups.every((group) => getSelectedRating(group.name) !== null);
+  }
+
+  ratingGroups.forEach((group) => {
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "rating-group";
+
+    appendTextElement(fieldset, "legend", "", group.label);
+    const hintId = `${group.name}-hint`;
+    const hint = appendTextElement(
+      fieldset,
+      "p",
+      "rating-group__hint",
+      group.hint
+    );
+    hint.id = hintId;
+
+    const options = document.createElement("div");
+    options.className = "rating-options";
+    options.setAttribute("aria-describedby", hintId);
+
+    for (let value = 1; value <= 5; value += 1) {
+      const option = document.createElement("label");
+      option.className = "rating-option";
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = group.name;
+      input.value = String(value);
+      input.required = true;
+      input.setAttribute("aria-label", `${group.label} ${value} 分`);
+      ratingInputs.push(input);
+
+      const optionText = appendTextElement(option, "span", "", String(value));
+      option.append(input, optionText);
+      options.append(option);
+    }
+
+    fieldset.append(options);
+    form.append(fieldset);
+  });
+
+  const commentLabel = appendTextElement(
+    form,
+    "label",
+    "open-comment",
+    "开放评论（可选）"
+  );
+  const comment = document.createElement("textarea");
+  comment.name = "openComment";
+  comment.rows = 4;
+  comment.placeholder = "可以写下你对故事、声音体验或参与研究的想法。";
+  commentLabel.append(comment);
+
+  const status = appendTextElement(
+    form,
+    "p",
+    "feedback-form__status",
+    "完成三项评分后即可提交。"
+  );
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+
+  const submit = document.createElement("button");
+  submit.className = "feedback-submit";
+  submit.type = "submit";
+  submit.disabled = true;
+  submit.textContent = "提交反馈";
+  form.append(submit);
+
+  function refreshFeedbackState() {
+    const isComplete = hasCompleteRatings();
+    submit.disabled = !isComplete;
+
+    if (!isComplete) {
+      form.dataset.feedbackStatus = "empty";
+      status.textContent = "完成三项评分后即可提交。";
+      return;
+    }
+
+    form.dataset.feedbackStatus = "ready";
+    status.textContent = "可以提交反馈。";
+  }
+
+  function refreshSubmittedFeedbackState() {
+    if (form.dataset.feedbackStatus === "submitting") {
+      submit.disabled = true;
+      return;
+    }
+
+    if (form.dataset.feedbackStatus === "submitted") {
+      const isComplete = hasCompleteRatings();
+      submit.disabled = !isComplete;
+      form.dataset.feedbackStatus = isComplete ? "ready" : "empty";
+      status.textContent = isComplete
+        ? "已修改反馈，可再次提交更新记录。"
+        : "完成三项评分后即可提交。";
+      return;
+    }
+
+    refreshFeedbackState();
+  }
+
+  ratingInputs.forEach((input) => {
+    input.addEventListener("change", refreshSubmittedFeedbackState);
+  });
+  comment.addEventListener("input", refreshSubmittedFeedbackState);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const interestLift = getSelectedRating("interestLift");
+    const understandingSupport = getSelectedRating("understandingSupport");
+    const participationIntent = getSelectedRating("participationIntent");
+
+    if (
+      interestLift === null ||
+      understandingSupport === null ||
+      participationIntent === null
+    ) {
+      refreshFeedbackState();
+      return;
+    }
+
+    submit.disabled = true;
+    form.dataset.feedbackStatus = "submitting";
+    status.textContent = "正在记录反馈...";
+
+    const record: FeedbackRecord = {
+      storyId: experience.story.id,
+      ratings: {
+        interestLift,
+        understandingSupport,
+        participationIntent
+      },
+      openComment: comment.value.trim(),
+      stage: "post-story",
+      submittedAt: new Date().toISOString()
+    };
+
+    try {
+      const result = await feedbackSubmitter.submitFeedback(record);
+      form.dataset.feedbackStatus = "submitted";
+      status.textContent = `反馈已记录：${result.recordId}`;
+    } catch {
+      form.dataset.feedbackStatus = "ready";
+      submit.disabled = false;
+      status.textContent = "反馈暂时无法记录，请稍后重试。";
+    }
+  });
+
+  feedbackSection.append(form);
+  main.append(feedbackSection);
   container.append(main);
 }
 

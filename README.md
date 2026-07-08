@@ -75,6 +75,7 @@ The story content is currently provided by a local structured data adapter
 behind the story content interface. Prototype audio is provided through an
 audio provider interface and a mock adapter; the playback session owns the
 current sentence, switching, stop state, and highlight synchronization. The mock
-adapter is not a real TTS model quality claim. Feedback collector seams remain
-reserved for later slices. This prototype does not lock in a baseline TTS
-comparison, backend, account system, CMS, or real TTS model.
+adapter is not a real TTS model quality claim. Post-experience feedback is
+submitted through a replaceable feedback submitter interface and defaults to an
+in-memory research record adapter. This prototype does not lock in a baseline
+TTS comparison, backend, account system, CMS, or real TTS model.

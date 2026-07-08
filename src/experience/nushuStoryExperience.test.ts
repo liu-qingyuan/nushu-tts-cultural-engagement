@@ -6,8 +6,16 @@ import {
   getVisibleJourneyEntry
 } from "./nushuStoryExperience";
 import { getDefaultStory } from "./storyContent";
+import { mockNushuAudioProvider } from "./audioProvider";
+import type { FeedbackRecord, FeedbackSubmitter } from "./feedbackSubmission";
 
 function waitForPrototypeAudio() {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+function waitForFeedbackSubmission() {
   return new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
@@ -135,5 +143,78 @@ describe("default Nushu story experience", () => {
     expect(promise?.getAttribute("aria-pressed")).toBe("true");
     expect(promise?.textContent).toContain("原型音频暂缺");
     expect(promise?.textContent).toContain("Nushu TTS prototype audio");
+  });
+
+  it("submits post-experience feedback as a structured research record", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+    const submittedRecords: FeedbackRecord[] = [];
+    const feedbackSubmitter: FeedbackSubmitter = {
+      async submitFeedback(record) {
+        submittedRecords.push(record);
+        return {
+          recordId: `test-feedback-${submittedRecords.length}`,
+          submittedAt: record.submittedAt
+        };
+      }
+    };
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(
+      app as HTMLElement,
+      defaultNushuStoryExperience,
+      mockNushuAudioProvider,
+      feedbackSubmitter
+    );
+
+    const interest = app?.querySelector<HTMLInputElement>(
+      'input[name="interestLift"][value="5"]'
+    );
+    const understanding = app?.querySelector<HTMLInputElement>(
+      'input[name="understandingSupport"][value="4"]'
+    );
+    const participation = app?.querySelector<HTMLInputElement>(
+      'input[name="participationIntent"][value="5"]'
+    );
+    const comment = app?.querySelector<HTMLTextAreaElement>(
+      'textarea[name="openComment"]'
+    );
+    const submit = app?.querySelector<HTMLButtonElement>(
+      'button[type="submit"]'
+    );
+
+    interest?.click();
+    understanding?.click();
+    participation?.click();
+    if (comment) {
+      comment.value = "I understand why Nushu voice matters after the story.";
+      comment.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    submit?.click();
+    await waitForFeedbackSubmission();
+
+    expect(submittedRecords).toHaveLength(1);
+    expect(submittedRecords[0]).toMatchObject({
+      storyId: "sisters-letter",
+      ratings: {
+        interestLift: 5,
+        understandingSupport: 4,
+        participationIntent: 5
+      },
+      openComment:
+        "I understand why Nushu voice matters after the story.",
+      stage: "post-story"
+    });
+    expect(submittedRecords[0]?.submittedAt).toEqual(expect.any(String));
+    expect(app?.textContent).toContain("反馈已记录");
+    expect(app?.textContent).toContain("test-feedback-1");
+
+    if (comment) {
+      comment.value = "Updated comment after reading the success state.";
+      comment.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    expect(submit?.disabled).toBe(false);
+    expect(app?.textContent).toContain("已修改反馈，可再次提交更新记录");
   });
 });
