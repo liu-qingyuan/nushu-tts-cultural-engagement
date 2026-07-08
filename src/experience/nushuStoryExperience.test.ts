@@ -199,6 +199,46 @@ describe("default Nushu story experience", () => {
     expect(greeting?.textContent).toContain("后续会替换为正式点读音频");
   });
 
+  it("updates the active reading desk text when users choose another sentence", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+    enterStoryExperience(app);
+
+    const activeDesk = app?.querySelector<HTMLElement>(
+      '[aria-label="当前点读句"]'
+    );
+    const memory = Array.from(app?.querySelectorAll("button") ?? []).find(
+      (button) => button.textContent?.includes("我们把旧日的歌写下")
+    );
+
+    expect(activeDesk?.textContent).toContain("远方的姐妹");
+    expect(activeDesk?.textContent).toContain("Distant sister");
+    expect(activeDesk?.textContent).toContain("承载祝福");
+
+    memory?.click();
+    await waitForPrototypeAudio();
+
+    expect(activeDesk?.textContent).toContain("我们把旧日的歌写下");
+    expect(activeDesk?.textContent).toContain("We write down old songs");
+    expect(activeDesk?.textContent).toContain("文化实践");
+    expect(activeDesk?.textContent).toContain("正在播放示意声音");
+    expect(activeDesk?.textContent).not.toContain("远方的姐妹");
+    expect(memory?.getAttribute("aria-current")).toBe("true");
+    expect(memory?.getAttribute("aria-pressed")).toBe("true");
+    expect(memory?.textContent).toContain("02");
+    expect(
+      activeDesk?.querySelector<HTMLElement>(
+        '.reader-desk__audio[data-playback-status="playing"]'
+      )?.textContent
+    ).toContain("正在播放示意声音");
+    expect(activeDesk?.querySelectorAll(".reader-desk__wave span")).toHaveLength(
+      28
+    );
+  });
+
   it("keeps sentence playback mutually exclusive in the rendered story", async () => {
     document.body.innerHTML = '<div id="app"></div>';
 

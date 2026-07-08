@@ -424,16 +424,172 @@ export function renderExperience(
   );
   storySection.append(storyHeader);
 
+  const readerDesk = document.createElement("div");
+  readerDesk.className = "reader-desk";
+
+  const sentenceRail = document.createElement("aside");
+  sentenceRail.className = "reader-desk__rail";
+  sentenceRail.setAttribute("aria-label", "故事句子索引");
+  appendTextElement(
+    sentenceRail,
+    "p",
+    "reader-desk__rail-title",
+    `故事 · 共 ${experience.story.sentences.length} 句`
+  );
+
   const sentenceList = document.createElement("ol");
   sentenceList.className = "sentence-list";
+  sentenceRail.append(sentenceList);
+
+  const activeSentence =
+    experience.story.sentences[0] ?? {
+      id: "empty",
+      nushuText: "𛅰𛅱",
+      zhText: "暂无故事句子。",
+      enText: "No story sentence is available.",
+      culturalNote: "故事内容准备后会显示在这里。"
+    };
+  let selectedSentenceId = activeSentence.id;
+
+  const activeSheet = document.createElement("article");
+  activeSheet.className = "reader-desk__sheet";
+  activeSheet.setAttribute("aria-label", "当前点读句");
+
+  const activeCount = appendTextElement(
+    activeSheet,
+    "p",
+    "reader-desk__count",
+    ""
+  );
+  const activeNushu = appendTextElement(
+    activeSheet,
+    "p",
+    "reader-desk__nushu",
+    ""
+  );
+  activeNushu.lang = "zh-Nshu";
+  appendTextElement(activeSheet, "span", "reader-desk__seal", "女书");
+  const activeDivider = document.createElement("div");
+  activeDivider.className = "reader-desk__divider";
+  activeSheet.append(activeDivider);
+  const activeZh = appendTextElement(activeSheet, "p", "reader-desk__zh", "");
+  const activeEn = appendTextElement(activeSheet, "p", "reader-desk__en", "");
+  const activeNote = document.createElement("div");
+  activeNote.className = "reader-desk__note";
+  appendTextElement(activeNote, "p", "reader-desk__note-title", "文化小注");
+  const activeNoteText = appendTextElement(activeNote, "p", "", "");
+  activeSheet.append(activeNote);
+
+  const activeAudio = document.createElement("div");
+  activeAudio.className = "reader-desk__audio";
+  activeAudio.dataset.playbackStatus = "idle";
+  const activeAudioStatus = appendTextElement(
+    activeAudio,
+    "p",
+    "reader-desk__audio-status",
+    "点读待命"
+  );
+  activeAudioStatus.setAttribute("role", "status");
+  activeAudioStatus.setAttribute("aria-live", "polite");
+  const activeAudioWave = document.createElement("div");
+  activeAudioWave.className = "reader-desk__wave";
+  activeAudioWave.setAttribute("aria-hidden", "true");
+  for (let index = 0; index < 28; index += 1) {
+    const bar = document.createElement("span");
+    bar.className = `reader-desk__wave-bar reader-desk__wave-bar--${
+      index % 7
+    }`;
+    activeAudioWave.append(bar);
+  }
+  activeAudio.append(activeAudioWave);
+  const activeAudioDetail = appendTextElement(
+    activeAudio,
+    "p",
+    "reader-desk__audio-detail",
+    "点击这句听女书点读声音。"
+  );
+  activeSheet.append(activeAudio);
+
+  const activeAside = document.createElement("aside");
+  activeAside.className = "reader-desk__aside";
+  activeAside.setAttribute("aria-label", "翻译与声音状态");
+  appendTextElement(activeAside, "p", "reader-desk__aside-title", "中文译文");
+  const asideZh = appendTextElement(
+    activeAside,
+    "p",
+    "reader-desk__aside-zh",
+    ""
+  );
+  appendTextElement(
+    activeAside,
+    "p",
+    "reader-desk__aside-title",
+    "English Translation"
+  );
+  const asideEn = appendTextElement(
+    activeAside,
+    "p",
+    "reader-desk__aside-en",
+    ""
+  );
+  appendTextElement(activeAside, "p", "reader-desk__aside-title", "音频状态");
+  const asideStatus = appendTextElement(
+    activeAside,
+    "p",
+    "reader-desk__aside-status",
+    ""
+  );
+  const asideDetail = appendTextElement(
+    activeAside,
+    "p",
+    "reader-desk__aside-detail",
+    ""
+  );
+
   const sentenceButtons: HTMLButtonElement[] = [];
 
   function refreshSentenceButtons() {
     const snapshot = playbackSession.getSnapshot();
+    const selectedSentence =
+      experience.story.sentences.find(
+        (sentence) => sentence.id === selectedSentenceId
+      ) ?? activeSentence;
+    const selectedIndex = Math.max(
+      0,
+      experience.story.sentences.findIndex(
+        (sentence) => sentence.id === selectedSentence.id
+      )
+    );
+    const selectedIsActive =
+      snapshot.activeSentenceId === selectedSentence.id &&
+      snapshot.status !== "idle";
+    const selectedStatus = selectedIsActive ? snapshot.status : "idle";
+    const selectedStatusLabel = selectedIsActive
+      ? snapshot.statusLabel
+      : "点读待命";
+    const selectedStatusDetail = selectedIsActive
+      ? snapshot.statusDetail
+      : "点击这句听女书点读声音。";
+
+    activeCount.textContent = `第 ${selectedIndex + 1} 句 / 共 ${
+      experience.story.sentences.length
+    } 句`;
+    activeNushu.textContent = selectedSentence.nushuText;
+    activeZh.textContent = selectedSentence.zhText;
+    activeEn.textContent = selectedSentence.enText;
+    activeNoteText.textContent = selectedSentence.culturalNote;
+    activeAudio.dataset.playbackStatus = selectedStatus;
+    activeAudioStatus.textContent = selectedStatusLabel;
+    activeAudioDetail.textContent = selectedStatusDetail;
+    asideZh.textContent = selectedSentence.zhText;
+    asideEn.textContent = selectedSentence.enText;
+    asideStatus.textContent = selectedStatusLabel;
+    asideDetail.textContent = selectedStatusDetail;
 
     sentenceButtons.forEach((button) => {
       const sentenceId = button.dataset.sentenceId ?? "";
       const isActive = playbackSession.isSentenceActive(sentenceId);
+      const isSelected = selectedSentenceId === sentenceId;
       const statusElement = button.querySelector<HTMLElement>(
         ".sentence__audio-status"
       );
@@ -442,7 +598,9 @@ export function renderExperience(
       );
 
       button.classList.toggle("sentence--active", isActive);
+      button.classList.toggle("sentence--selected", isSelected);
       button.setAttribute("aria-pressed", String(isActive));
+      button.setAttribute("aria-current", isSelected ? "true" : "false");
       button.dataset.playbackStatus = isActive ? snapshot.status : "idle";
 
       if (statusElement) {
@@ -459,7 +617,7 @@ export function renderExperience(
     });
   }
 
-  experience.story.sentences.forEach((sentence) => {
+  experience.story.sentences.forEach((sentence, index) => {
     const item = document.createElement("li");
     item.className = "sentence-list__item";
 
@@ -468,9 +626,15 @@ export function renderExperience(
     button.type = "button";
     button.dataset.sentenceId = sentence.id;
     button.dataset.playbackStatus = "idle";
-    button.setAttribute("aria-label", `点读：${sentence.zhText}`);
+    button.setAttribute("aria-label", `点读第 ${index + 1} 句：${sentence.zhText}`);
     button.setAttribute("aria-pressed", "false");
 
+    appendTextElement(
+      button,
+      "span",
+      "sentence__index",
+      String(index + 1).padStart(2, "0")
+    );
     const nushuText = appendTextElement(
       button,
       "span",
@@ -479,8 +643,18 @@ export function renderExperience(
     );
     nushuText.lang = "zh-Nshu";
     appendTextElement(button, "span", "sentence__zh", sentence.zhText);
-    appendTextElement(button, "span", "sentence__en", sentence.enText);
-    appendTextElement(button, "span", "sentence__note", sentence.culturalNote);
+    appendTextElement(
+      button,
+      "span",
+      "sentence__en sentence__rail-extra",
+      sentence.enText
+    );
+    appendTextElement(
+      button,
+      "span",
+      "sentence__note sentence__rail-extra",
+      sentence.culturalNote
+    );
     appendTextElement(button, "span", "sentence__audio-status", "点读待命");
     appendTextElement(
       button,
@@ -490,6 +664,7 @@ export function renderExperience(
     );
 
     button.addEventListener("click", async () => {
+      selectedSentenceId = sentence.id;
       const playback = playbackSession.selectSentence(sentence.id);
       refreshSentenceButtons();
       await playback;
@@ -501,7 +676,8 @@ export function renderExperience(
     sentenceList.append(item);
   });
   refreshSentenceButtons();
-  storySection.append(sentenceList);
+  readerDesk.append(sentenceRail, activeSheet, activeAside);
+  storySection.append(readerDesk);
 
   const sourceNote = appendTextElement(
     storySection,
