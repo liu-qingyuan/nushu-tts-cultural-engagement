@@ -9,6 +9,9 @@ import {
   type NushuStoryExperience
 } from "./experience/nushuStoryExperience";
 import {
+  createParticipationActionController
+} from "./experience/participationActions";
+import {
   createMemoryFeedbackSubmitter,
   type FeedbackRecord,
   type FeedbackSubmitter
@@ -43,6 +46,10 @@ export function renderExperience(
   container.replaceChildren();
   const playbackSession = createPlaybackSession(audioProvider);
   const researchFlow = createResearchFlowSession();
+  const participationActionController = createParticipationActionController(
+    experience.story
+  );
+  const { actions: participationActions } = participationActionController;
 
   const main = document.createElement("main");
   main.className = "app-shell";
@@ -387,6 +394,104 @@ export function renderExperience(
     experience.story.sourceNote
   );
   sourceNote.setAttribute("aria-label", "来源和改写标注");
+
+  const participationSection = document.createElement("section");
+  participationSection.className = "participation-actions";
+  participationSection.setAttribute("aria-labelledby", "participation-title");
+
+  const participationHeader = document.createElement("div");
+  participationHeader.className = "participation-actions__header";
+  appendTextElement(participationHeader, "p", "eyebrow", "Cultural Engagement");
+  const participationTitle = appendTextElement(
+    participationHeader,
+    "h3",
+    "",
+    "继续参与"
+  );
+  participationTitle.id = "participation-title";
+  appendTextElement(
+    participationHeader,
+    "p",
+    "participation-actions__intro",
+    "保存这段故事、分享给朋友，或继续阅读女书文化资料。"
+  );
+  participationSection.append(participationHeader);
+
+  const participationGrid = document.createElement("div");
+  participationGrid.className = "participation-actions__grid";
+
+  const participationStatus = appendTextElement(
+    participationSection,
+    "p",
+    "participation-actions__status",
+    "选择一个参与行动后，这里会显示结果。"
+  );
+  participationStatus.setAttribute("role", "status");
+  participationStatus.setAttribute("aria-live", "polite");
+
+  const saveStory = document.createElement("button");
+  saveStory.className = "participation-action";
+  saveStory.type = "button";
+  let storySaved = participationActionController.isStorySaved();
+
+  function refreshSavedStoryState() {
+    saveStory.textContent = storySaved
+      ? participationActions.save.savedLabel
+      : participationActions.save.label;
+    saveStory.setAttribute("aria-pressed", String(storySaved));
+  }
+
+  saveStory.addEventListener("click", () => {
+    storySaved = true;
+    const result = participationActionController.saveStory();
+    refreshSavedStoryState();
+    participationStatus.textContent = result.status;
+  });
+  refreshSavedStoryState();
+  participationGrid.append(saveStory);
+
+  const shareStory = document.createElement("button");
+  shareStory.className = "participation-action";
+  shareStory.type = "button";
+  shareStory.textContent = participationActions.share.label;
+
+  const shareLink = document.createElement("input");
+  shareLink.className = "participation-actions__share-link";
+  shareLink.name = "storyShareLink";
+  shareLink.type = "text";
+  shareLink.readOnly = true;
+  shareLink.value = participationActions.share.url;
+  shareLink.setAttribute("aria-label", "可复制的故事分享链接");
+
+  shareStory.addEventListener("click", async () => {
+    const result = await participationActionController.shareStory();
+    participationStatus.textContent = result.status;
+
+    if (result.shouldSelectShareLink) {
+      shareLink.focus();
+      shareLink.select();
+    }
+  });
+  participationGrid.append(shareStory);
+
+  const learnMore = document.createElement("a");
+  learnMore.className = "participation-action participation-action--link";
+  learnMore.href = participationActions.learnMore.href;
+  learnMore.target = "_blank";
+  learnMore.rel = "noopener noreferrer";
+  learnMore.textContent = participationActions.learnMore.label;
+  learnMore.setAttribute(
+    "aria-label",
+    `${participationActions.learnMore.label}：${participationActions.learnMore.description}`
+  );
+  learnMore.addEventListener("click", () => {
+    const result = participationActionController.openLearnMore();
+    participationStatus.textContent = result.status;
+  });
+  participationGrid.append(learnMore);
+
+  participationSection.append(participationGrid, shareLink);
+  storySection.append(participationSection);
 
   const storyComplete = document.createElement("button");
   storyComplete.className = "stage-action";

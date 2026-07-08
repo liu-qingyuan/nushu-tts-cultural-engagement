@@ -72,6 +72,8 @@ participant-facing entry point and the default structured story:
   English support text, cultural notes, and source/adaptation labeling
 - sentence-level prototype audio state that keeps the selected Nushu text,
   translations, notes, and playback status synchronized
+- a lightweight participation action panel for saving the current story,
+  sharing a story link, and opening reader-friendly Nushu cultural material
 - a post-experience feedback stage with the same lightweight dimensions plus an
   optional open comment
 - a clear completion state for interview or experiment records
@@ -84,6 +86,8 @@ adapter is not a real TTS model quality claim. Post-experience feedback is
 submitted through a replaceable feedback submitter interface and defaults to an
 in-memory research record adapter. The research flow module only owns stage
 progression, can-advance rules, and the lightweight research record; it does not
-fetch TTS audio, own story content, or store feedback. This prototype does not
-lock in a baseline TTS comparison, backend, account system, CMS, or real TTS
-model.
+fetch TTS audio, own story content, or store feedback. Participation actions are
+provided by a small story-scoped controller that can use browser save/share
+capabilities and ordinary links without requiring accounts, backend storage, or
+community features. This prototype does not lock in a baseline TTS comparison,
+backend, account system, CMS, or real TTS model.

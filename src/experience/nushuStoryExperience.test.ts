@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   defaultNushuStoryExperience,
   getVisibleJourneyEntry
@@ -48,7 +48,17 @@ function completeStoryExperience(app: HTMLElement | null) {
   completeStory?.click();
 }
 
+function findButtonByText(app: HTMLElement | null, text: string) {
+  return Array.from(app?.querySelectorAll("button") ?? []).find((button) =>
+    button.textContent?.includes(text)
+  );
+}
+
 describe("default Nushu story experience", () => {
+  beforeEach(() => {
+    globalThis.localStorage?.clear();
+  });
+
   it("exposes a user-visible research journey entry", () => {
     const entry = getVisibleJourneyEntry();
 
@@ -181,6 +191,46 @@ describe("default Nushu story experience", () => {
     expect(promise?.getAttribute("aria-pressed")).toBe("true");
     expect(promise?.textContent).toContain("原型音频暂缺");
     expect(promise?.textContent).toContain("Nushu TTS prototype audio");
+  });
+
+  it("renders participation actions with visible save, share, and learn-more outcomes", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+    enterStoryExperience(app);
+
+    const save = findButtonByText(app, "保存这段故事");
+    const share = findButtonByText(app, "分享给朋友");
+    const learnMore = app?.querySelector<HTMLAnchorElement>(
+      'a[href="https://courier.unesco.org/en/articles/nushu-tears-sunshine"]'
+    );
+
+    expect(app?.textContent).toContain("继续参与");
+    expect(save).toBeDefined();
+    expect(share).toBeDefined();
+    expect(learnMore?.textContent).toContain("了解更多女书资料");
+
+    save?.click();
+    expect(save?.textContent).toContain("已保存这段故事");
+    expect(app?.textContent).toContain("已保存《三朝书里的问候》");
+
+    learnMore?.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true })
+    );
+    expect(app?.textContent).toContain("正在打开女书资料页面");
+
+    share?.click();
+    await waitForPrototypeAudio();
+
+    const shareLink = app?.querySelector<HTMLInputElement>(
+      'input[name="storyShareLink"]'
+    );
+
+    expect(app?.textContent).toContain("分享链接已准备");
+    expect(shareLink?.value).toContain("story=sisters-letter");
+    expect(shareLink?.value).toContain("#experience-preview");
   });
 
   it("submits post-experience feedback as a structured research record", async () => {
