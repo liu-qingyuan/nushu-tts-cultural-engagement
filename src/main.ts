@@ -14,6 +14,10 @@ import {
   type FeedbackSubmitter
 } from "./experience/feedbackSubmission";
 import { createPlaybackSession } from "./experience/playbackSession";
+import {
+  createResearchFlowSession,
+  type ResearchScaleInput
+} from "./experience/researchFlow";
 
 function appendTextElement(
   parent: HTMLElement,
@@ -38,6 +42,7 @@ export function renderExperience(
 ) {
   container.replaceChildren();
   const playbackSession = createPlaybackSession(audioProvider);
+  const researchFlow = createResearchFlowSession();
 
   const main = document.createElement("main");
   main.className = "app-shell";
@@ -58,7 +63,7 @@ export function renderExperience(
   actions.setAttribute("aria-label", "默认研究体验入口");
   const action = document.createElement("a");
   action.className = "primary-action";
-  action.href = "#experience-preview";
+  action.href = "#pre-experience";
   action.textContent = experience.entry.primaryActionLabel;
   actions.append(action);
   content.append(actions);
@@ -89,6 +94,177 @@ export function renderExperience(
 
   hero.append(content, preview);
   main.append(hero);
+
+  const journeyStatus = appendTextElement(
+    main,
+    "p",
+    "journey-status",
+    "研究阶段：体验前问题"
+  );
+  journeyStatus.setAttribute("role", "status");
+  journeyStatus.setAttribute("aria-live", "polite");
+
+  const preSection = document.createElement("section");
+  preSection.className = "pre-panel";
+  preSection.id = "pre-experience";
+  preSection.setAttribute("aria-labelledby", "pre-title");
+
+  const preHeader = document.createElement("div");
+  preHeader.className = "pre-panel__header";
+  appendTextElement(preHeader, "p", "eyebrow", "Pre-Experience Check");
+  const preTitle = appendTextElement(preHeader, "h2", "", "体验前问题");
+  preTitle.id = "pre-title";
+  appendTextElement(
+    preHeader,
+    "p",
+    "pre-panel__intro",
+    "进入故事前，请用 1-5 分记录你当前对女书的了解程度、兴趣和继续探索意愿。"
+  );
+  preSection.append(preHeader);
+
+  const preForm = document.createElement("form");
+  preForm.className = "research-form";
+  preForm.dataset.researchStatus = "empty";
+  const preInputs: HTMLInputElement[] = [];
+
+  const preRatingGroups = [
+    {
+      name: "preFamiliarity",
+      key: "familiarity",
+      label: "了解程度",
+      hint: "你现在对女书文字和文化背景有多少了解？"
+    },
+    {
+      name: "preInterest",
+      key: "interest",
+      label: "兴趣",
+      hint: "你现在有多想继续了解女书故事和声音体验？"
+    },
+    {
+      name: "preParticipationIntent",
+      key: "participationIntent",
+      label: "继续探索意愿",
+      hint: "你现在有多愿意参与后续研究访谈或文化行动？"
+    }
+  ] as const;
+
+  const postRatingGroups = [
+    {
+      name: "postFamiliarity",
+      key: "familiarity",
+      label: "体验后了解程度",
+      hint: "故事、翻译和文化说明是否帮助你理解女书语境？"
+    },
+    {
+      name: "postInterest",
+      key: "interest",
+      label: "体验后兴趣",
+      hint: "这段体验是否提升了你继续了解女书和 TTS 的兴趣？"
+    },
+    {
+      name: "postParticipationIntent",
+      key: "participationIntent",
+      label: "体验后继续探索意愿",
+      hint: "体验后你是否更愿意参与后续研究或文化行动？"
+    }
+  ] as const;
+
+  function getSelectedRating(form: HTMLFormElement, name: string) {
+    const selected = form.querySelector<HTMLInputElement>(
+      `input[name="${name}"]:checked`
+    );
+    return selected ? Number(selected.value) : null;
+  }
+
+  function readScaleInput(
+    form: HTMLFormElement,
+    groups: typeof preRatingGroups | typeof postRatingGroups
+  ): Partial<ResearchScaleInput> {
+    return groups.reduce<Partial<ResearchScaleInput>>((input, group) => {
+      const rating = getSelectedRating(form, group.name);
+
+      if (rating !== null) {
+        input[group.key] = rating;
+      }
+
+      return input;
+    }, {});
+  }
+
+  function hasCompleteScaleInput(
+    input: Partial<ResearchScaleInput>
+  ): input is ResearchScaleInput {
+    return (
+      typeof input.familiarity === "number" &&
+      typeof input.interest === "number" &&
+      typeof input.participationIntent === "number"
+    );
+  }
+
+  function appendRatingGroups(
+    form: HTMLFormElement,
+    groups: typeof preRatingGroups | typeof postRatingGroups,
+    inputs: HTMLInputElement[]
+  ) {
+    groups.forEach((group) => {
+      const fieldset = document.createElement("fieldset");
+      fieldset.className = "rating-group";
+
+      appendTextElement(fieldset, "legend", "", group.label);
+      const hintId = `${group.name}-hint`;
+      const hint = appendTextElement(
+        fieldset,
+        "p",
+        "rating-group__hint",
+        group.hint
+      );
+      hint.id = hintId;
+
+      const options = document.createElement("div");
+      options.className = "rating-options";
+      options.setAttribute("aria-describedby", hintId);
+
+      for (let value = 1; value <= 5; value += 1) {
+        const option = document.createElement("label");
+        option.className = "rating-option";
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = group.name;
+        input.value = String(value);
+        input.required = true;
+        input.setAttribute("aria-label", `${group.label} ${value} 分`);
+        inputs.push(input);
+
+        const optionText = appendTextElement(option, "span", "", String(value));
+        option.append(input, optionText);
+        options.append(option);
+      }
+
+      fieldset.append(options);
+      form.append(fieldset);
+    });
+  }
+
+  appendRatingGroups(preForm, preRatingGroups, preInputs);
+
+  const preStatus = appendTextElement(
+    preForm,
+    "p",
+    "research-form__status",
+    "完成三项体验前问题后即可进入故事。"
+  );
+  preStatus.setAttribute("role", "status");
+  preStatus.setAttribute("aria-live", "polite");
+
+  const preSubmit = document.createElement("button");
+  preSubmit.className = "primary-action";
+  preSubmit.type = "submit";
+  preSubmit.disabled = true;
+  preSubmit.textContent = "进入故事体验";
+  preForm.append(preSubmit);
+  preSection.append(preForm);
+  main.append(preSection);
 
   const storySection = document.createElement("section");
   storySection.className = "story-reader";
@@ -211,6 +387,12 @@ export function renderExperience(
     experience.story.sourceNote
   );
   sourceNote.setAttribute("aria-label", "来源和改写标注");
+
+  const storyComplete = document.createElement("button");
+  storyComplete.className = "stage-action";
+  storyComplete.type = "button";
+  storyComplete.textContent = "完成故事体验，进入反馈";
+  storySection.append(storyComplete);
   main.append(storySection);
 
   const feedbackSection = document.createElement("section");
@@ -231,7 +413,7 @@ export function renderExperience(
     feedbackHeader,
     "p",
     "feedback-panel__intro",
-    "请用 1-5 分记录这段故事体验对兴趣、理解和参与意愿的影响。开放评论可选，会与评分一起形成研究记录。"
+    "请用 1-5 分记录体验后对女书的了解程度、兴趣和继续探索意愿。开放评论可选，会与评分一起形成研究记录。"
   );
   feedbackSection.append(feedbackHeader);
 
@@ -239,75 +421,8 @@ export function renderExperience(
   form.className = "feedback-form";
   form.dataset.feedbackStatus = "empty";
 
-  const ratingGroups = [
-    {
-      name: "interestLift",
-      label: "兴趣提升",
-      hint: "这段体验是否提升了你继续了解女书和 TTS 的兴趣？"
-    },
-    {
-      name: "understandingSupport",
-      label: "理解支持",
-      hint: "故事、翻译和文化说明是否帮助你理解女书语境？"
-    },
-    {
-      name: "participationIntent",
-      label: "参与意愿",
-      hint: "体验后你是否更愿意参与后续研究或文化行动？"
-    }
-  ] as const;
-
   const ratingInputs: HTMLInputElement[] = [];
-
-  function getSelectedRating(name: string) {
-    const selected = form.querySelector<HTMLInputElement>(
-      `input[name="${name}"]:checked`
-    );
-    return selected ? Number(selected.value) : null;
-  }
-
-  function hasCompleteRatings() {
-    return ratingGroups.every((group) => getSelectedRating(group.name) !== null);
-  }
-
-  ratingGroups.forEach((group) => {
-    const fieldset = document.createElement("fieldset");
-    fieldset.className = "rating-group";
-
-    appendTextElement(fieldset, "legend", "", group.label);
-    const hintId = `${group.name}-hint`;
-    const hint = appendTextElement(
-      fieldset,
-      "p",
-      "rating-group__hint",
-      group.hint
-    );
-    hint.id = hintId;
-
-    const options = document.createElement("div");
-    options.className = "rating-options";
-    options.setAttribute("aria-describedby", hintId);
-
-    for (let value = 1; value <= 5; value += 1) {
-      const option = document.createElement("label");
-      option.className = "rating-option";
-
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = group.name;
-      input.value = String(value);
-      input.required = true;
-      input.setAttribute("aria-label", `${group.label} ${value} 分`);
-      ratingInputs.push(input);
-
-      const optionText = appendTextElement(option, "span", "", String(value));
-      option.append(input, optionText);
-      options.append(option);
-    }
-
-    fieldset.append(options);
-    form.append(fieldset);
-  });
+  appendRatingGroups(form, postRatingGroups, ratingInputs);
 
   const commentLabel = appendTextElement(
     form,
@@ -337,11 +452,38 @@ export function renderExperience(
   submit.textContent = "提交反馈";
   form.append(submit);
 
-  function refreshFeedbackState() {
-    const isComplete = hasCompleteRatings();
-    submit.disabled = !isComplete;
+  function refreshFlowSections() {
+    const snapshot = researchFlow.getSnapshot();
+    journeyStatus.textContent = {
+      "pre-experience": "研究阶段：体验前问题",
+      "story-experience": "研究阶段：默认女书故事体验",
+      "post-experience": "研究阶段：体验后反馈",
+      complete: "研究阶段：流程已完成"
+    }[snapshot.phase];
+    preSection.hidden = snapshot.phase !== "pre-experience";
+    storySection.hidden = snapshot.phase !== "story-experience";
+    feedbackSection.hidden = snapshot.phase !== "post-experience";
+    completeSection.hidden = snapshot.phase !== "complete";
+  }
 
-    if (!isComplete) {
+  function refreshPreState() {
+    const snapshot = researchFlow.updatePreExperience(
+      readScaleInput(preForm, preRatingGroups)
+    );
+    preSubmit.disabled = !snapshot.canAdvance;
+    preForm.dataset.researchStatus = snapshot.canAdvance ? "ready" : "empty";
+    preStatus.textContent = snapshot.canAdvance
+      ? "可以进入默认女书故事体验。"
+      : "完成三项体验前问题后即可进入故事。";
+  }
+
+  function refreshFeedbackState() {
+    const snapshot = researchFlow.updatePostExperience(
+      readScaleInput(form, postRatingGroups)
+    );
+    submit.disabled = !snapshot.canAdvance;
+
+    if (!snapshot.canAdvance) {
       form.dataset.feedbackStatus = "empty";
       status.textContent = "完成三项评分后即可提交。";
       return;
@@ -358,10 +500,12 @@ export function renderExperience(
     }
 
     if (form.dataset.feedbackStatus === "submitted") {
-      const isComplete = hasCompleteRatings();
-      submit.disabled = !isComplete;
-      form.dataset.feedbackStatus = isComplete ? "ready" : "empty";
-      status.textContent = isComplete
+      const snapshot = researchFlow.updatePostExperience(
+        readScaleInput(form, postRatingGroups)
+      );
+      submit.disabled = !snapshot.canAdvance;
+      form.dataset.feedbackStatus = snapshot.canAdvance ? "ready" : "empty";
+      status.textContent = snapshot.canAdvance
         ? "已修改反馈，可再次提交更新记录。"
         : "完成三项评分后即可提交。";
       return;
@@ -370,23 +514,39 @@ export function renderExperience(
     refreshFeedbackState();
   }
 
+  preInputs.forEach((input) => {
+    input.addEventListener("change", refreshPreState);
+  });
   ratingInputs.forEach((input) => {
     input.addEventListener("change", refreshSubmittedFeedbackState);
   });
   comment.addEventListener("input", refreshSubmittedFeedbackState);
 
+  preForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = readScaleInput(preForm, preRatingGroups);
+
+    if (!hasCompleteScaleInput(input)) {
+      refreshPreState();
+      return;
+    }
+
+    researchFlow.submitPreExperience(input);
+    refreshFlowSections();
+  });
+
+  storyComplete.addEventListener("click", () => {
+    researchFlow.markStoryComplete();
+    refreshFlowSections();
+    refreshFeedbackState();
+  });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const interestLift = getSelectedRating("interestLift");
-    const understandingSupport = getSelectedRating("understandingSupport");
-    const participationIntent = getSelectedRating("participationIntent");
+    const postInput = readScaleInput(form, postRatingGroups);
 
-    if (
-      interestLift === null ||
-      understandingSupport === null ||
-      participationIntent === null
-    ) {
+    if (!hasCompleteScaleInput(postInput)) {
       refreshFeedbackState();
       return;
     }
@@ -398,12 +558,12 @@ export function renderExperience(
     const record: FeedbackRecord = {
       storyId: experience.story.id,
       ratings: {
-        interestLift,
-        understandingSupport,
-        participationIntent
+        familiarity: postInput.familiarity,
+        interest: postInput.interest,
+        participationIntent: postInput.participationIntent
       },
       openComment: comment.value.trim(),
-      stage: "post-story",
+      stage: "post-experience",
       submittedAt: new Date().toISOString()
     };
 
@@ -411,6 +571,12 @@ export function renderExperience(
       const result = await feedbackSubmitter.submitFeedback(record);
       form.dataset.feedbackStatus = "submitted";
       status.textContent = `反馈已记录：${result.recordId}`;
+      researchFlow.submitPostExperience({
+        ...postInput,
+        openComment: comment.value,
+        feedbackRecordId: result.recordId
+      });
+      refreshFlowSections();
     } catch {
       form.dataset.feedbackStatus = "ready";
       submit.disabled = false;
@@ -420,6 +586,27 @@ export function renderExperience(
 
   feedbackSection.append(form);
   main.append(feedbackSection);
+
+  const completeSection = document.createElement("section");
+  completeSection.className = "completion-panel";
+  completeSection.setAttribute("aria-labelledby", "completion-title");
+  appendTextElement(completeSection, "p", "eyebrow", "Research Record Ready");
+  const completionTitle = appendTextElement(
+    completeSection,
+    "h2",
+    "",
+    "流程已完成"
+  );
+  completionTitle.id = "completion-title";
+  appendTextElement(
+    completeSection,
+    "p",
+    "completion-panel__summary",
+    "体验前记录、故事完成状态和体验后反馈已经形成一条轻量研究记录，适合继续访谈或实验记录。"
+  );
+  main.append(completeSection);
+
+  refreshFlowSections();
   container.append(main);
 }
 

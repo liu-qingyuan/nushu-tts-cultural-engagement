@@ -64,12 +64,17 @@ journey, not as a layout or file structure. Its public model describes the
 participant-facing entry point and the default structured story:
 
 - a default research entry shown to participants
-- a single “start default experience” action
+- a lightweight pre-experience check for familiarity, interest, and
+  participation intent before the story opens
+- a default story stage that can be explicitly completed before feedback
 - a study note that makes the prototype boundary explicit
 - a default story with stable sentence ids, Nushu text, Chinese explanation,
   English support text, cultural notes, and source/adaptation labeling
 - sentence-level prototype audio state that keeps the selected Nushu text,
   translations, notes, and playback status synchronized
+- a post-experience feedback stage with the same lightweight dimensions plus an
+  optional open comment
+- a clear completion state for interview or experiment records
 
 The story content is currently provided by a local structured data adapter
 behind the story content interface. Prototype audio is provided through an
@@ -77,5 +82,8 @@ audio provider interface and a mock adapter; the playback session owns the
 current sentence, switching, stop state, and highlight synchronization. The mock
 adapter is not a real TTS model quality claim. Post-experience feedback is
 submitted through a replaceable feedback submitter interface and defaults to an
-in-memory research record adapter. This prototype does not lock in a baseline
-TTS comparison, backend, account system, CMS, or real TTS model.
+in-memory research record adapter. The research flow module only owns stage
+progression, can-advance rules, and the lightweight research record; it does not
+fetch TTS audio, own story content, or store feedback. This prototype does not
+lock in a baseline TTS comparison, backend, account system, CMS, or real TTS
+model.

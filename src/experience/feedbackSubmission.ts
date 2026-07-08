@@ -1,6 +1,6 @@
 export interface FeedbackRatings {
-  interestLift: number;
-  understandingSupport: number;
+  familiarity: number;
+  interest: number;
   participationIntent: number;
 }
 
@@ -8,7 +8,7 @@ export interface FeedbackRecord {
   storyId: string;
   ratings: FeedbackRatings;
   openComment: string;
-  stage: "post-story";
+  stage: "post-experience";
   submittedAt: string;
 }
 

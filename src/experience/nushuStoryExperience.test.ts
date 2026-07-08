@@ -21,6 +21,33 @@ function waitForFeedbackSubmission() {
   });
 }
 
+function selectRating(
+  app: HTMLElement | null,
+  name: string,
+  value: number
+) {
+  app
+    ?.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`)
+    ?.click();
+}
+
+function enterStoryExperience(app: HTMLElement | null) {
+  selectRating(app, "preFamiliarity", 2);
+  selectRating(app, "preInterest", 4);
+  selectRating(app, "preParticipationIntent", 3);
+  const startStory = Array.from(app?.querySelectorAll("button") ?? []).find(
+    (button) => button.textContent === "进入故事体验"
+  );
+  startStory?.click();
+}
+
+function completeStoryExperience(app: HTMLElement | null) {
+  const completeStory = Array.from(app?.querySelectorAll("button") ?? []).find(
+    (button) => button.textContent === "完成故事体验，进入反馈"
+  );
+  completeStory?.click();
+}
+
 describe("default Nushu story experience", () => {
   it("exposes a user-visible research journey entry", () => {
     const entry = getVisibleJourneyEntry();
@@ -70,6 +97,14 @@ describe("default Nushu story experience", () => {
     expect(app).not.toBeNull();
     renderExperience(app as HTMLElement);
 
+    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
+    expect(storySection?.hidden).toBe(true);
+    expect(app?.textContent).toContain("体验前问题");
+
+    enterStoryExperience(app);
+
+    expect(storySection?.hidden).toBe(false);
+    expect(app?.textContent).toContain("研究阶段：默认女书故事体验");
     expect(app?.textContent).toContain("三朝书里的问候");
     expect(app?.textContent).toContain("远方的姐妹");
     expect(app?.textContent).toContain("Distant sister");
@@ -83,6 +118,7 @@ describe("default Nushu story experience", () => {
     const { renderExperience } = await import("../main");
     const app = document.querySelector<HTMLElement>("#app");
     renderExperience(app as HTMLElement);
+    enterStoryExperience(app);
 
     const greeting = Array.from(app?.querySelectorAll("button") ?? []).find(
       (button) => button.textContent?.includes("远方的姐妹")
@@ -108,6 +144,7 @@ describe("default Nushu story experience", () => {
     const { renderExperience } = await import("../main");
     const app = document.querySelector<HTMLElement>("#app");
     renderExperience(app as HTMLElement);
+    enterStoryExperience(app);
     const buttons = Array.from(app?.querySelectorAll("button") ?? []);
     const greeting = buttons.find((button) =>
       button.textContent?.includes("远方的姐妹")
@@ -133,6 +170,7 @@ describe("default Nushu story experience", () => {
     const { renderExperience } = await import("../main");
     const app = document.querySelector<HTMLElement>("#app");
     renderExperience(app as HTMLElement);
+    enterStoryExperience(app);
     const promise = Array.from(app?.querySelectorAll("button") ?? []).find(
       (button) => button.textContent?.includes("等到春水再涨时")
     );
@@ -167,25 +205,20 @@ describe("default Nushu story experience", () => {
       feedbackSubmitter
     );
 
-    const interest = app?.querySelector<HTMLInputElement>(
-      'input[name="interestLift"][value="5"]'
-    );
-    const understanding = app?.querySelector<HTMLInputElement>(
-      'input[name="understandingSupport"][value="4"]'
-    );
-    const participation = app?.querySelector<HTMLInputElement>(
-      'input[name="participationIntent"][value="5"]'
-    );
+    enterStoryExperience(app);
+    completeStoryExperience(app);
+    expect(app?.textContent).toContain("研究阶段：体验后反馈");
+
     const comment = app?.querySelector<HTMLTextAreaElement>(
       'textarea[name="openComment"]'
     );
     const submit = app?.querySelector<HTMLButtonElement>(
-      'button[type="submit"]'
+      ".feedback-submit"
     );
 
-    interest?.click();
-    understanding?.click();
-    participation?.click();
+    selectRating(app, "postFamiliarity", 4);
+    selectRating(app, "postInterest", 5);
+    selectRating(app, "postParticipationIntent", 5);
     if (comment) {
       comment.value = "I understand why Nushu voice matters after the story.";
       comment.dispatchEvent(new Event("input", { bubbles: true }));
@@ -197,24 +230,16 @@ describe("default Nushu story experience", () => {
     expect(submittedRecords[0]).toMatchObject({
       storyId: "sisters-letter",
       ratings: {
-        interestLift: 5,
-        understandingSupport: 4,
+        familiarity: 4,
+        interest: 5,
         participationIntent: 5
       },
       openComment:
         "I understand why Nushu voice matters after the story.",
-      stage: "post-story"
+      stage: "post-experience"
     });
     expect(submittedRecords[0]?.submittedAt).toEqual(expect.any(String));
-    expect(app?.textContent).toContain("反馈已记录");
-    expect(app?.textContent).toContain("test-feedback-1");
-
-    if (comment) {
-      comment.value = "Updated comment after reading the success state.";
-      comment.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-
-    expect(submit?.disabled).toBe(false);
-    expect(app?.textContent).toContain("已修改反馈，可再次提交更新记录");
+    expect(app?.textContent).toContain("研究阶段：流程已完成");
+    expect(app?.textContent).toContain("流程已完成");
   });
 });

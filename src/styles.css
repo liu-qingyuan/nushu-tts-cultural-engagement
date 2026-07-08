@@ -102,11 +102,20 @@ h1 {
   color: #fffaf0;
   font-weight: 760;
   text-decoration: none;
+  cursor: pointer;
+  font: inherit;
 }
 
 .primary-action:focus-visible {
   outline: 3px solid #c8683f;
   outline-offset: 3px;
+}
+
+.primary-action:disabled {
+  border-color: rgba(27, 27, 29, 0.28);
+  background: rgba(27, 27, 29, 0.16);
+  color: #68666a;
+  cursor: not-allowed;
 }
 
 .study-note {
@@ -172,6 +181,60 @@ h1 {
   gap: 34px;
   padding: 72px clamp(28px, 6vw, 88px) 88px;
   background: #fffaf0;
+}
+
+.journey-status {
+  margin: 0;
+  padding: 16px clamp(28px, 6vw, 88px);
+  border-top: 1px solid rgba(27, 27, 29, 0.12);
+  border-bottom: 1px solid rgba(27, 27, 29, 0.12);
+  background: #1b1b1d;
+  color: #fffaf0;
+  font-size: 0.95rem;
+  font-weight: 760;
+  line-height: 1.5;
+}
+
+.pre-panel,
+.completion-panel {
+  display: grid;
+  gap: 28px;
+  padding: 72px clamp(28px, 6vw, 88px) 88px;
+  background: #fffaf0;
+}
+
+.pre-panel__header,
+.completion-panel > * {
+  max-width: 860px;
+}
+
+.pre-panel h2,
+.completion-panel h2 {
+  margin-bottom: 14px;
+  font-size: 2.25rem;
+  line-height: 1.12;
+}
+
+.pre-panel__intro,
+.completion-panel__summary {
+  max-width: 76ch;
+  color: #414044;
+  font-size: 1.04rem;
+  line-height: 1.72;
+}
+
+.research-form {
+  display: grid;
+  gap: 22px;
+  max-width: 980px;
+}
+
+.research-form__status {
+  min-height: 1.6em;
+  margin: 0;
+  color: #6f2c2c;
+  font-weight: 760;
+  line-height: 1.6;
 }
 
 .story-reader__header {
@@ -311,6 +374,24 @@ h1 {
   color: #6f2c2c;
   font-size: 0.96rem;
   line-height: 1.7;
+}
+
+.stage-action {
+  justify-self: start;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid #6f2c2c;
+  border-radius: 4px;
+  background: #6f2c2c;
+  color: #fffaf0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 760;
+}
+
+.stage-action:focus-visible {
+  outline: 3px solid #c8683f;
+  outline-offset: 3px;
 }
 
 .feedback-panel {
@@ -509,6 +590,15 @@ h1 {
     padding: 52px 18px 64px;
   }
 
+  .journey-status {
+    padding: 14px 18px;
+  }
+
+  .pre-panel,
+  .completion-panel {
+    padding: 52px 18px 64px;
+  }
+
   .feedback-panel {
     padding: 52px 18px 64px;
   }
@@ -517,7 +607,9 @@ h1 {
     font-size: 1.85rem;
   }
 
-  .feedback-panel h2 {
+  .pre-panel h2,
+  .feedback-panel h2,
+  .completion-panel h2 {
     font-size: 1.75rem;
   }
 
