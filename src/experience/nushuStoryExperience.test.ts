@@ -143,6 +143,38 @@ describe("default Nushu story experience", () => {
     expect(app?.textContent).not.toMatch(/原型|mock|prototype|真实模型/i);
   });
 
+  it("keeps the before-reading note locked until all three starting scores are recorded", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    const startStory = Array.from(app?.querySelectorAll("button") ?? []).find(
+      (button) => button.textContent === "进入故事体验"
+    );
+    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
+
+    expect(startStory?.disabled).toBe(true);
+    expect(app?.textContent).toContain("这不是测试，没有对错");
+    expect(app?.textContent).toContain("女书字样（一局部）");
+
+    selectRating(app, "preFamiliarity", 2);
+    selectRating(app, "preInterest", 4);
+
+    expect(startStory?.disabled).toBe(true);
+
+    selectRating(app, "preParticipationIntent", 3);
+
+    expect(startStory?.disabled).toBe(false);
+    expect(app?.textContent).toContain("可以进入默认女书故事体验");
+
+    startStory?.click();
+
+    expect(storySection?.hidden).toBe(false);
+    expect(app?.textContent).toContain("研究阶段：默认女书故事体验");
+  });
+
   it("lets users click a sentence to see synchronized reading audio state", async () => {
     document.body.innerHTML = '<div id="app"></div>';
 

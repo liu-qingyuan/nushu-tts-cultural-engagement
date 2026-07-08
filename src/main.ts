@@ -57,11 +57,44 @@ export function renderExperience(
   const hero = document.createElement("section");
   hero.className = "hero";
 
+  const heroTopbar = document.createElement("div");
+  heroTopbar.className = "hero__topbar";
+  const brand = document.createElement("a");
+  brand.className = "brand-mark";
+  brand.href = "#";
+  brand.setAttribute("aria-label", "Nushu TTS 首页");
+  appendTextElement(brand, "span", "brand-mark__seal", "女书");
+  appendTextElement(brand, "span", "brand-mark__name", "Nushu TTS");
+  heroTopbar.append(brand);
+
+  const nav = document.createElement("nav");
+  nav.className = "hero-nav";
+  nav.setAttribute("aria-label", "体验导航");
+  [
+    ["Home", "#"],
+    ["Before Reading", "#pre-experience"]
+  ].forEach(([label, href], index) => {
+    const navLink = document.createElement("a");
+    navLink.href = href;
+    navLink.textContent = label;
+    if (index === 0) {
+      navLink.setAttribute("aria-current", "page");
+    }
+    nav.append(navLink);
+  });
+  heroTopbar.append(nav);
+
+  const utility = document.createElement("div");
+  utility.className = "hero-utility";
+  appendTextElement(utility, "span", "", "简体中文");
+  heroTopbar.append(utility);
+
   const content = document.createElement("div");
   content.className = "hero__content";
-  appendTextElement(content, "p", "eyebrow", experience.entry.eyebrow);
+  appendTextElement(content, "p", "eyebrow hero__eyebrow", "湖南江永 · 女书声音体验");
   const title = appendTextElement(content, "h1", "", experience.entry.title);
   title.id = "experience-title";
+  appendTextElement(content, "p", "hero__subtitle", "听见女书故事");
   appendTextElement(content, "p", "hero__summary", experience.entry.summary);
 
   const actions = document.createElement("div");
@@ -79,14 +112,18 @@ export function renderExperience(
   preview.className = "story-preview";
   preview.setAttribute("aria-label", experience.name);
   const openingSentence = experience.story.sentences[0];
+  const storyNushuText = experience.story.sentences
+    .map((sentence) => sentence.nushuText)
+    .join(" ");
 
   const visual = document.createElement("div");
   visual.className = "story-preview__visual";
+  appendTextElement(visual, "span", "story-preview__annotation", "句读 / 轻声 / 换韵");
   const previewScript = appendTextElement(
     visual,
     "span",
     "story-preview__script",
-    openingSentence?.nushuText ?? "女书"
+    storyNushuText || openingSentence?.nushuText || "女书"
   );
   previewScript.lang = "zh-Nshu";
   appendTextElement(
@@ -128,7 +165,7 @@ export function renderExperience(
   );
   preview.append(previewBody);
 
-  hero.append(content, preview);
+  hero.append(heroTopbar, content, preview);
   main.append(hero);
 
   const journeyStatus = appendTextElement(
@@ -159,9 +196,21 @@ export function renderExperience(
     preHeader,
     "p",
     "pre-panel__intro",
-    "用 1-5 分记录你当前对女书的了解程度、兴趣和继续探索意愿。完成后会进入中英双语故事阅读。"
+    "这不是测试，没有对错。从你的直觉出发，标记此刻的你，让接下来的旅程更贴近你。"
   );
   preSection.append(preHeader);
+
+  const preArtifact = document.createElement("div");
+  preArtifact.className = "pre-artifact";
+  const artifactText = appendTextElement(
+    preArtifact,
+    "span",
+    "pre-artifact__glyphs",
+    storyNushuText || "𛅰𛅱𛅲"
+  );
+  artifactText.lang = "zh-Nshu";
+  appendTextElement(preArtifact, "span", "pre-artifact__caption", "女书字样（一局部）");
+  preSection.append(preArtifact);
 
   const preForm = document.createElement("form");
   preForm.className = "research-form";
@@ -173,19 +222,28 @@ export function renderExperience(
       name: "preFamiliarity",
       key: "familiarity",
       label: "了解程度",
-      hint: "你现在对女书文字和文化背景有多少了解？"
+      english: "Familiarity",
+      hint: "你现在对女书文字和文化背景有多少了解？",
+      lowLabel: "完全不熟悉",
+      highLabel: "非常熟悉"
     },
     {
       name: "preInterest",
       key: "interest",
       label: "兴趣",
-      hint: "你现在有多想继续了解女书故事和声音体验？"
+      english: "Interest",
+      hint: "你现在有多想继续了解女书故事和声音体验？",
+      lowLabel: "不太感兴趣",
+      highLabel: "非常感兴趣"
     },
     {
       name: "preParticipationIntent",
       key: "participationIntent",
       label: "继续探索意愿",
-      hint: "你现在有多愿意参与后续研究访谈或文化行动？"
+      english: "Participation intent",
+      hint: "你现在有多愿意参与后续研究访谈或文化行动？",
+      lowLabel: "只是看看",
+      highLabel: "很想参与"
     }
   ] as const;
 
@@ -194,19 +252,28 @@ export function renderExperience(
       name: "postFamiliarity",
       key: "familiarity",
       label: "体验后了解程度",
-      hint: "故事、翻译和文化说明是否帮助你理解女书语境？"
+      english: "Familiarity",
+      hint: "故事、翻译和文化说明是否帮助你理解女书语境？",
+      lowLabel: "帮助有限",
+      highLabel: "非常清楚"
     },
     {
       name: "postInterest",
       key: "interest",
       label: "体验后兴趣",
-      hint: "这段体验是否提升了你继续了解女书和 TTS 的兴趣？"
+      english: "Interest",
+      hint: "这段体验是否提升了你继续了解女书和 TTS 的兴趣？",
+      lowLabel: "没有变化",
+      highLabel: "更想了解"
     },
     {
       name: "postParticipationIntent",
       key: "participationIntent",
       label: "体验后继续探索意愿",
-      hint: "体验后你是否更愿意参与后续研究或文化行动？"
+      english: "Participation intent",
+      hint: "体验后你是否更愿意参与后续研究或文化行动？",
+      lowLabel: "暂不参与",
+      highLabel: "愿意参与"
     }
   ] as const;
 
@@ -251,7 +318,11 @@ export function renderExperience(
       const fieldset = document.createElement("fieldset");
       fieldset.className = "rating-group";
 
-      appendTextElement(fieldset, "legend", "", group.label);
+      const legend = document.createElement("legend");
+      legend.className = "rating-group__legend";
+      appendTextElement(legend, "span", "rating-group__label", group.label);
+      appendTextElement(legend, "span", "rating-group__english", group.english);
+      fieldset.append(legend);
       const hintId = `${group.name}-hint`;
       const hint = appendTextElement(
         fieldset,
@@ -268,6 +339,7 @@ export function renderExperience(
       for (let value = 1; value <= 5; value += 1) {
         const option = document.createElement("label");
         option.className = "rating-option";
+        option.dataset.ratingValue = String(value);
 
         const input = document.createElement("input");
         input.type = "radio";
@@ -277,12 +349,22 @@ export function renderExperience(
         input.setAttribute("aria-label", `${group.label} ${value} 分`);
         inputs.push(input);
 
-        const optionText = appendTextElement(option, "span", "", String(value));
+        const optionText = appendTextElement(
+          option,
+          "span",
+          "rating-option__value",
+          String(value)
+        );
         option.append(input, optionText);
         options.append(option);
       }
 
       fieldset.append(options);
+      const endpoints = document.createElement("div");
+      endpoints.className = "rating-group__endpoints";
+      appendTextElement(endpoints, "span", "", group.lowLabel);
+      appendTextElement(endpoints, "span", "", group.highLabel);
+      fieldset.append(endpoints);
       form.append(fieldset);
     });
   }
