@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues and PRDs are tracked in GitHub Issues; external PRs are not a triage request surface. See `docs/agents/issue-tracker.md`.
+Issues and PRDs are tracked in GitHub Issues; external PRs can also be triage request inputs. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
@@ -11,4 +11,3 @@ This repo uses the default triage labels: `needs-triage`, `needs-info`, `ready-f
 ### Domain docs
 
 This repo uses a single-context domain docs layout with root `CONTEXT.md` and ADRs in `docs/adr/`. See `docs/agents/domain.md`.
-

@@ -1,17 +1,17 @@
-# Domain docs
+# 领域文档
 
-How engineering skills should use domain documentation in this repository.
+本仓库是单上下文仓库。
 
-## Read before exploring
+工程 skills 在探索和修改代码前，应按需读取根目录 `CONTEXT.md` 和 `docs/adr/`。如果这些文件不存在，安静地继续；不要把缺失当作问题，也不要预先创建它们。
 
-- **`CONTEXT.md`** at the repository root, if present.
-- **`docs/adr/`** for architecture decisions relevant to the area being changed, if present.
+## 探索前读取
 
-If these files do not exist, continue quietly. Do not treat their absence as a problem and do not create them preemptively. Create or update them only when domain language or architectural decisions become clear enough to record.
+- 根目录 `CONTEXT.md`：项目领域语言、统一术语和容易混淆的概念
+- `docs/adr/`：与当前修改区域相关的架构决策记录
 
-## Layout
+只有当领域语言或架构决策已经明确时，才通过 `/domain-modeling-lqy`、`/grill-with-docs-lqy` 或 `/improve-codebase-architecture-lqy` 等工作流创建或更新这些文档。
 
-This repository uses a single-context domain docs layout:
+## 期望布局
 
 ```text
 /
@@ -20,13 +20,12 @@ This repository uses a single-context domain docs layout:
 └── src/
 ```
 
-## Vocabulary
+## 术语使用
 
-When naming domain concepts in issue titles, implementation plans, refactoring proposals, hypotheses, or test names, use the terms defined in `CONTEXT.md` if it exists.
+在 issue 标题、重构提案、假设、测试名称或文档中命名领域概念时，优先使用 `CONTEXT.md` 中定义的术语。
 
-If a needed concept is missing from `CONTEXT.md`, either avoid inventing new terminology or note that `/domain-modeling-lqy` should update the domain model.
+如果需要的概念还没有出现在 `CONTEXT.md` 中，要么重新考虑这个术语是否属于本项目，要么记录需要通过 `/domain-modeling-lqy` 补充统一语言。
 
-## ADR conflicts
+## ADR 冲突
 
-If your output contradicts an existing ADR, call that out explicitly instead of silently overriding it.
-
+如果某个提案或实现会违背现有 ADR，必须明确指出冲突，而不是静默覆盖已有决策。
