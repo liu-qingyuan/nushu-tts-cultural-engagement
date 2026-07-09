@@ -49,6 +49,7 @@ export function renderExperience(
     experience.story
   );
   const { actions: participationActions } = participationActionController;
+  let currentPage: "home" | "flow" = "home";
 
   const main = document.createElement("main");
   main.className = "app-shell";
@@ -56,6 +57,7 @@ export function renderExperience(
 
   const hero = document.createElement("section");
   hero.className = "hero";
+  hero.setAttribute("aria-hidden", "false");
 
   const heroTopbar = document.createElement("div");
   heroTopbar.className = "hero__topbar";
@@ -71,8 +73,7 @@ export function renderExperience(
   nav.className = "hero-nav";
   nav.setAttribute("aria-label", "体验导航");
   [
-    ["Home", "#"],
-    ["Before Reading", "#pre-experience"]
+    ["Home", "#"]
   ].forEach(([label, href], index) => {
     const navLink = document.createElement("a");
     navLink.href = href;
@@ -94,15 +95,20 @@ export function renderExperience(
   appendTextElement(content, "p", "eyebrow hero__eyebrow", "湖南江永 · 女书声音体验");
   const title = appendTextElement(content, "h1", "", experience.entry.title);
   title.id = "experience-title";
-  appendTextElement(content, "p", "hero__subtitle", "听见女书故事");
+  appendTextElement(
+    content,
+    "p",
+    "hero__subtitle",
+    "听见女书故事 · 纸本档案 + 声音仪式感"
+  );
   appendTextElement(content, "p", "hero__summary", experience.entry.summary);
 
   const actions = document.createElement("div");
   actions.className = "hero__actions";
   actions.setAttribute("aria-label", "默认研究体验入口");
-  const action = document.createElement("a");
+  const action = document.createElement("button");
   action.className = "primary-action";
-  action.href = "#pre-experience";
+  action.type = "button";
   action.textContent = experience.entry.primaryActionLabel;
   actions.append(action);
   content.append(actions);
@@ -176,6 +182,8 @@ export function renderExperience(
   );
   journeyStatus.setAttribute("role", "status");
   journeyStatus.setAttribute("aria-live", "polite");
+  journeyStatus.hidden = true;
+  journeyStatus.setAttribute("aria-hidden", "true");
 
   const preSection = document.createElement("section");
   preSection.className = "pre-panel";
@@ -837,6 +845,20 @@ export function renderExperience(
     section.setAttribute("aria-hidden", String(isHidden));
   }
 
+  function setHomeHidden(isHidden: boolean) {
+    hero.hidden = isHidden;
+    hero.setAttribute("aria-hidden", String(isHidden));
+    journeyStatus.hidden = !isHidden;
+    journeyStatus.setAttribute("aria-hidden", String(!isHidden));
+  }
+
+  function goToPreExperiencePage() {
+    currentPage = "flow";
+    setHomeHidden(true);
+    refreshFlowSections();
+    scrollStageIntoView(preSection);
+  }
+
   function refreshFlowSections() {
     const snapshot = researchFlow.getSnapshot();
     journeyStatus.textContent = {
@@ -853,7 +875,7 @@ export function renderExperience(
     ];
 
     flowSections.forEach(([section, isHidden]) => {
-      setFlowSectionHidden(section, isHidden);
+      setFlowSectionHidden(section, currentPage === "home" || isHidden);
     });
   }
 
@@ -931,6 +953,7 @@ export function renderExperience(
   comment.addEventListener("input", () => {
     commentCounter.textContent = `${comment.value.length} / 400`;
   });
+  action.addEventListener("click", goToPreExperiencePage);
 
   preForm.addEventListener("submit", (event) => {
     event.preventDefault();

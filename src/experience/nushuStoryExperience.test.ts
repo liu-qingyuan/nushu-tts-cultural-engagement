@@ -31,7 +31,14 @@ function selectRating(
     ?.click();
 }
 
+function startReadingExperience(app: HTMLElement | null) {
+  if (app?.querySelector<HTMLElement>(".hero")?.hidden === false) {
+    findButtonByText(app, "开始阅读体验")?.click();
+  }
+}
+
 function enterStoryExperience(app: HTMLElement | null) {
+  startReadingExperience(app);
   selectRating(app, "preFamiliarity", 2);
   selectRating(app, "preInterest", 4);
   selectRating(app, "preParticipationIntent", 3);
@@ -111,7 +118,6 @@ describe("default Nushu story experience", () => {
 
     const storySection = app?.querySelector<HTMLElement>("#experience-preview");
     expect(storySection?.hidden).toBe(true);
-    expect(app?.textContent).toContain("体验前问题");
 
     enterStoryExperience(app);
 
@@ -143,6 +149,44 @@ describe("default Nushu story experience", () => {
     expect(app?.textContent).not.toMatch(/原型|mock|prototype|真实模型/i);
   });
 
+  it("opens on a standalone home entry page before exposing the research flow", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    const home = app?.querySelector<HTMLElement>(".hero");
+    const preSection = app?.querySelector<HTMLElement>("#pre-experience");
+    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
+    const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
+    const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
+    const journeyStatus = app?.querySelector<HTMLElement>(".journey-status");
+
+    expect(home?.hidden).toBe(false);
+    expect(home?.getAttribute("aria-hidden")).toBe("false");
+    expect(preSection?.hidden).toBe(true);
+    expect(storySection?.hidden).toBe(true);
+    expect(feedbackSection?.hidden).toBe(true);
+    expect(completionSection?.hidden).toBe(true);
+    expect(preSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(storySection?.getAttribute("aria-hidden")).toBe("true");
+    expect(feedbackSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(completionSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(journeyStatus?.hidden).toBe(true);
+    expect(app?.textContent).toContain("湖南江永 · 女书声音体验");
+    expect(app?.textContent).toContain("纸本档案");
+
+    startReadingExperience(app);
+
+    expect(home?.hidden).toBe(true);
+    expect(home?.getAttribute("aria-hidden")).toBe("true");
+    expect(preSection?.hidden).toBe(false);
+    expect(preSection?.getAttribute("aria-hidden")).toBe("false");
+    expect(journeyStatus?.hidden).toBe(false);
+    expect(app?.textContent).toContain("进入故事前，先记录你的起点");
+  });
+
   it("keeps the before-reading note locked until all three starting scores are recorded", async () => {
     document.body.innerHTML = '<div id="app"></div>';
 
@@ -154,6 +198,8 @@ describe("default Nushu story experience", () => {
       (button) => button.textContent === "进入故事体验"
     );
     const storySection = app?.querySelector<HTMLElement>("#experience-preview");
+
+    startReadingExperience(app);
 
     expect(startStory?.disabled).toBe(true);
     expect(app?.textContent).toContain("这不是测试，没有对错");
@@ -186,6 +232,13 @@ describe("default Nushu story experience", () => {
     const storySection = app?.querySelector<HTMLElement>("#experience-preview");
     const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
     const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
+
+    expect(preSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(storySection?.getAttribute("aria-hidden")).toBe("true");
+    expect(feedbackSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(completionSection?.getAttribute("aria-hidden")).toBe("true");
+
+    startReadingExperience(app);
 
     expect(preSection?.getAttribute("aria-hidden")).toBe("false");
     expect(storySection?.getAttribute("aria-hidden")).toBe("true");
