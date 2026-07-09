@@ -65,7 +65,7 @@ participant-facing entry point and the default structured story:
 
 - a default research entry shown to participants
 - a lightweight pre-experience check for familiarity, interest, and
-  participation intent before the story opens
+  participation intent before the story opens in the normal entry flow
 - a default story stage that can be explicitly completed before feedback
 - a study note that makes the prototype boundary explicit
 - a default story with stable sentence ids, Nushu text, Chinese explanation,
@@ -74,6 +74,8 @@ participant-facing entry point and the default structured story:
   translations, notes, and playback status synchronized
 - a lightweight participation action panel for saving the current story,
   sharing a story link, and opening reader-friendly Nushu cultural material
+- a page-aware story share link that can open the story stage directly without
+  leaving the home entry visible above the shared story context
 - a post-experience feedback stage with the same lightweight dimensions plus an
   optional open comment
 - a clear completion state for interview or experiment records

@@ -60,6 +60,27 @@ describe("research flow session", () => {
     });
   });
 
+  it("can enter a shared story without creating a pre-experience record", () => {
+    const session = createResearchFlowSession({
+      now: () => "2026-07-08T00:00:00.000Z"
+    });
+
+    const sharedStory = session.enterSharedStory();
+
+    expect(sharedStory).toMatchObject({
+      phase: "story-experience",
+      canAdvance: true,
+      record: {}
+    });
+
+    expect(session.markStoryComplete()).toMatchObject({
+      phase: "post-experience",
+      record: {
+        storyCompletedAt: "2026-07-08T00:00:00.000Z"
+      }
+    });
+  });
+
   it("records story completion before accepting post-experience feedback", () => {
     const timestamps = [
       "2026-07-08T00:00:00.000Z",

@@ -8,7 +8,8 @@ import {
   type NushuStoryExperience
 } from "./experience/nushuStoryExperience";
 import {
-  createParticipationActionController
+  createParticipationActionController,
+  isStoryShareEntryForStory
 } from "./experience/participationActions";
 import {
   createMemoryFeedbackSubmitter,
@@ -1160,6 +1161,17 @@ export function renderExperience(
     "We respect your privacy. No personal data is collected. 本项目致力于文化保护与学术研究。";
   completeSection.append(privacyNote);
   main.append(completeSection);
+
+  if (
+    isStoryShareEntryForStory(
+      experience.story.id,
+      globalThis.location?.href ?? ""
+    )
+  ) {
+    researchFlow.enterSharedStory();
+    currentPage = "flow";
+    setHomeHidden(true);
+  }
 
   refreshFlowSections();
   container.append(main);

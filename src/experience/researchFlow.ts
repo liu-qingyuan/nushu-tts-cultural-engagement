@@ -40,6 +40,7 @@ export interface ResearchFlowSnapshot {
 
 export interface ResearchFlowSession {
   getSnapshot(): ResearchFlowSnapshot;
+  enterSharedStory(): ResearchFlowSnapshot;
   updatePreExperience(input: Partial<ResearchScaleInput>): ResearchFlowSnapshot;
   submitPreExperience(input?: Partial<ResearchScaleInput>): ResearchFlowSnapshot;
   markStoryComplete(): ResearchFlowSnapshot;
@@ -130,6 +131,13 @@ export function createResearchFlowSession(
 
   return {
     getSnapshot: snapshot,
+    enterSharedStory() {
+      if (phase === "pre-experience") {
+        phase = "story-experience";
+      }
+
+      return snapshot();
+    },
     updatePreExperience(input) {
       if (phase === "pre-experience") {
         preDraft = { ...preDraft, ...input };

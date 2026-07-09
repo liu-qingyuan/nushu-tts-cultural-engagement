@@ -42,14 +42,29 @@ export interface ParticipationActionResult {
   shouldSelectShareLink?: boolean;
 }
 
+export const sharedStoryPageValue = "story-experience";
+
 export function createStoryShareUrl(storyId: string, currentHref: string) {
   try {
     const url = new URL(currentHref);
     url.searchParams.set("story", storyId);
-    url.hash = "experience-preview";
+    url.searchParams.set("page", sharedStoryPageValue);
+    url.hash = "";
     return url.toString();
   } catch {
-    return `?story=${encodeURIComponent(storyId)}#experience-preview`;
+    return `?story=${encodeURIComponent(storyId)}&page=${sharedStoryPageValue}`;
+  }
+}
+
+export function isStoryShareEntryForStory(storyId: string, currentHref: string) {
+  try {
+    const url = new URL(currentHref, "https://nushu.local");
+    return (
+      url.searchParams.get("story") === storyId &&
+      url.searchParams.get("page") === sharedStoryPageValue
+    );
+  } catch {
+    return false;
   }
 }
 

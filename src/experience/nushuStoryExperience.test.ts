@@ -61,9 +61,20 @@ function findButtonByText(app: HTMLElement | null, text: string) {
   );
 }
 
+function getJourneySections(app: HTMLElement | null) {
+  return {
+    home: app?.querySelector<HTMLElement>(".hero"),
+    preSection: app?.querySelector<HTMLElement>("#pre-experience"),
+    storySection: app?.querySelector<HTMLElement>("#experience-preview"),
+    feedbackSection: app?.querySelector<HTMLElement>(".feedback-panel"),
+    completionSection: app?.querySelector<HTMLElement>(".completion-panel")
+  };
+}
+
 describe("default Nushu story experience", () => {
   beforeEach(() => {
     globalThis.localStorage?.clear();
+    window.history.replaceState(null, "", "/");
   });
 
   it("exposes a user-visible research journey entry", () => {
@@ -156,11 +167,13 @@ describe("default Nushu story experience", () => {
     const app = document.querySelector<HTMLElement>("#app");
     renderExperience(app as HTMLElement);
 
-    const home = app?.querySelector<HTMLElement>(".hero");
-    const preSection = app?.querySelector<HTMLElement>("#pre-experience");
-    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
-    const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
-    const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
+    const {
+      home,
+      preSection,
+      storySection,
+      feedbackSection,
+      completionSection
+    } = getJourneySections(app);
     const journeyStatus = app?.querySelector<HTMLElement>(".journey-status");
 
     expect(home?.hidden).toBe(false);
@@ -230,11 +243,13 @@ describe("default Nushu story experience", () => {
     const app = document.querySelector<HTMLElement>("#app");
     renderExperience(app as HTMLElement);
 
-    const home = app?.querySelector<HTMLElement>(".hero");
-    const preSection = app?.querySelector<HTMLElement>("#pre-experience");
-    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
-    const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
-    const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
+    const {
+      home,
+      preSection,
+      storySection,
+      feedbackSection,
+      completionSection
+    } = getJourneySections(app);
     const journeyStatus = app?.querySelector<HTMLElement>(".journey-status");
 
     enterStoryExperience(app);
@@ -442,9 +457,21 @@ describe("default Nushu story experience", () => {
     const learnMore = app?.querySelector<HTMLAnchorElement>(
       'a[href="https://courier.unesco.org/en/articles/nushu-tears-sunshine"]'
     );
+    const home = app?.querySelector<HTMLElement>(".hero");
+    const preSection = app?.querySelector<HTMLElement>("#pre-experience");
+    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
+    const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
+    const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
 
     expect(app?.textContent).toContain("研究阶段：流程已完成");
     expect(app?.textContent).toContain("Carry the story forward");
+    expect(home?.hidden).toBe(true);
+    expect(preSection?.hidden).toBe(true);
+    expect(storySection?.hidden).toBe(true);
+    expect(feedbackSection?.hidden).toBe(true);
+    expect(completionSection?.hidden).toBe(false);
+    expect(completionSection?.getAttribute("aria-hidden")).toBe("false");
+    expect(app?.textContent).toContain("你的阅读和反思已保存为本次会话的一条轻量研究记录");
     expect(save).toBeDefined();
     expect(share).toBeDefined();
     expect(learnMore?.textContent).toContain("Learn more about Nushu");
@@ -467,7 +494,37 @@ describe("default Nushu story experience", () => {
 
     expect(app?.textContent).toContain("分享链接已准备");
     expect(shareLink?.value).toContain("story=sisters-letter");
-    expect(shareLink?.value).toContain("#experience-preview");
+    expect(shareLink?.value).toContain("page=story-experience");
+    expect(shareLink?.value).not.toContain("#experience-preview");
+  });
+
+  it("opens shared story links directly in the story stage without showing the home page above it", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/nushu?story=sisters-letter&page=story-experience"
+    );
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    const home = app?.querySelector<HTMLElement>(".hero");
+    const preSection = app?.querySelector<HTMLElement>("#pre-experience");
+    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
+    const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
+    const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
+
+    expect(home?.hidden).toBe(true);
+    expect(home?.getAttribute("aria-hidden")).toBe("true");
+    expect(preSection?.hidden).toBe(true);
+    expect(storySection?.hidden).toBe(false);
+    expect(storySection?.getAttribute("aria-hidden")).toBe("false");
+    expect(feedbackSection?.hidden).toBe(true);
+    expect(completionSection?.hidden).toBe(true);
+    expect(app?.textContent).toContain("研究阶段：默认女书故事体验");
+    expect(app?.textContent).toContain("三朝书里的问候");
   });
 
   it("submits post-experience feedback as a structured research record", async () => {
