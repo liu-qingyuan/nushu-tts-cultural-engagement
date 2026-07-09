@@ -825,18 +825,6 @@ export function renderExperience(
   });
   feedbackSummary.append(feedbackCompare);
 
-  const returnToStory = document.createElement("button");
-  returnToStory.className = "feedback-summary__return";
-  returnToStory.type = "button";
-  returnToStory.textContent = "Return to story  返回故事";
-  returnToStory.addEventListener("click", () => {
-    setFlowSectionHidden(storySection, false);
-    setFlowSectionHidden(feedbackSection, true);
-    journeyStatus.textContent = "研究阶段：默认女书故事体验";
-    scrollStageIntoView(storySection);
-  });
-  feedbackSummary.append(returnToStory);
-
   feedbackLayout.append(form, feedbackSummary);
   feedbackSection.append(feedbackHeader, feedbackLayout);
 

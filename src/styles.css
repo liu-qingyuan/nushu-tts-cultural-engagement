@@ -2037,32 +2037,6 @@ h1 {
   opacity: 0.82;
 }
 
-.feedback-summary__return {
-  justify-self: start;
-  border: 0;
-  border-bottom: 1px solid currentColor;
-  padding: 4px 0;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: 1.04rem;
-  font-weight: 760;
-  transition:
-    color 180ms ease,
-    transform 180ms ease;
-}
-
-.feedback-summary__return:hover {
-  color: var(--accent);
-  transform: translateX(3px);
-}
-
-.feedback-summary__return:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 4px;
-}
-
 @media (max-width: 1120px) {
   .feedback-panel {
     grid-template-columns: 1fr;

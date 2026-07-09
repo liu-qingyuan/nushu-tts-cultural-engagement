@@ -285,7 +285,7 @@ describe("default Nushu story experience", () => {
     expect(completionSection?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("keeps story and feedback accessibility state synchronized when returning to the story", async () => {
+  it("shows the feedback page as the only current stage after the story is complete", async () => {
     document.body.innerHTML = '<div id="app"></div>';
 
     const { renderExperience } = await import("../main");
@@ -296,20 +296,16 @@ describe("default Nushu story experience", () => {
 
     const storySection = app?.querySelector<HTMLElement>("#experience-preview");
     const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
-    const returnToStory = findButtonByText(app, "Return to story");
+    const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
 
     expect(storySection?.hidden).toBe(true);
     expect(storySection?.getAttribute("aria-hidden")).toBe("true");
     expect(feedbackSection?.hidden).toBe(false);
     expect(feedbackSection?.getAttribute("aria-hidden")).toBe("false");
-
-    returnToStory?.click();
-
-    expect(storySection?.hidden).toBe(false);
-    expect(storySection?.getAttribute("aria-hidden")).toBe("false");
-    expect(feedbackSection?.hidden).toBe(true);
-    expect(feedbackSection?.getAttribute("aria-hidden")).toBe("true");
-    expect(app?.textContent).toContain("研究阶段：默认女书故事体验");
+    expect(completionSection?.hidden).toBe(true);
+    expect(completionSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(findButtonByText(app, "Return to story")).toBeUndefined();
+    expect(app?.textContent).toContain("研究阶段：体验后反馈");
   });
 
   it("lets users click a sentence to see synchronized reading audio state", async () => {
