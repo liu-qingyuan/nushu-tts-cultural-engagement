@@ -19,6 +19,7 @@ import {
 import { createPlaybackSession } from "./experience/playbackSession";
 import {
   createResearchFlowSession,
+  type ResearchFlowPhase,
   type ResearchScaleInput
 } from "./experience/researchFlow";
 
@@ -51,6 +52,7 @@ export function renderExperience(
   );
   const { actions: participationActions } = participationActionController;
   let currentPage: "home" | "flow" = "home";
+  type JourneyTarget = "home" | ResearchFlowPhase;
 
   const main = document.createElement("main");
   main.className = "app-shell";
@@ -59,6 +61,7 @@ export function renderExperience(
   const hero = document.createElement("section");
   hero.className = "hero";
   hero.setAttribute("aria-hidden", "false");
+  hero.tabIndex = -1;
 
   const heroTopbar = document.createElement("div");
   heroTopbar.className = "hero__topbar";
@@ -175,6 +178,45 @@ export function renderExperience(
   hero.append(heroTopbar, content, preview);
   main.append(hero);
 
+  const journeyNav = document.createElement("nav");
+  journeyNav.className = "journey-nav";
+  journeyNav.setAttribute("aria-label", "阶段导航");
+  journeyNav.hidden = true;
+  journeyNav.setAttribute("aria-hidden", "true");
+  const journeyNavLinks = new Map<JourneyTarget, HTMLAnchorElement>();
+  const journeyTargets: Array<{
+    target: JourneyTarget;
+    label: string;
+    href: string;
+  }> = [
+    { target: "home", label: "Home", href: "#" },
+    {
+      target: "pre-experience",
+      label: "Before Reading",
+      href: "#pre-experience"
+    },
+    {
+      target: "story-experience",
+      label: "Story",
+      href: "#experience-preview"
+    },
+    {
+      target: "post-experience",
+      label: "Feedback",
+      href: "#feedback"
+    },
+    { target: "complete", label: "Complete", href: "#complete" }
+  ];
+  journeyTargets.forEach(({ target, label, href }) => {
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    link.dataset.journeyTarget = target;
+    journeyNavLinks.set(target, link);
+    journeyNav.append(link);
+  });
+  main.append(journeyNav);
+
   const journeyStatus = appendTextElement(
     main,
     "p",
@@ -190,6 +232,7 @@ export function renderExperience(
   preSection.className = "pre-panel";
   preSection.id = "pre-experience";
   preSection.setAttribute("aria-labelledby", "pre-title");
+  preSection.tabIndex = -1;
 
   const preHeader = document.createElement("div");
   preHeader.className = "pre-panel__header";
@@ -402,6 +445,7 @@ export function renderExperience(
   storySection.className = "story-reader";
   storySection.id = "experience-preview";
   storySection.setAttribute("aria-labelledby", "story-title");
+  storySection.tabIndex = -1;
 
   const storyHeader = document.createElement("div");
   storyHeader.className = "story-reader__header";
@@ -705,7 +749,9 @@ export function renderExperience(
 
   const feedbackSection = document.createElement("section");
   feedbackSection.className = "feedback-panel";
+  feedbackSection.id = "feedback";
   feedbackSection.setAttribute("aria-labelledby", "feedback-title");
+  feedbackSection.tabIndex = -1;
 
   const feedbackHeader = document.createElement("div");
   feedbackHeader.className = "feedback-panel__header";
@@ -832,20 +878,96 @@ export function renderExperience(
   function setFlowSectionHidden(section: HTMLElement, isHidden: boolean) {
     section.hidden = isHidden;
     section.setAttribute("aria-hidden", String(isHidden));
+    section.toggleAttribute("inert", isHidden);
   }
 
   function setHomeHidden(isHidden: boolean) {
     hero.hidden = isHidden;
     hero.setAttribute("aria-hidden", String(isHidden));
+    hero.toggleAttribute("inert", isHidden);
+    journeyNav.hidden = !isHidden;
+    journeyNav.setAttribute("aria-hidden", String(!isHidden));
     journeyStatus.hidden = !isHidden;
     journeyStatus.setAttribute("aria-hidden", String(!isHidden));
   }
 
-  function goToPreExperiencePage() {
+  function getJourneySection(target: ResearchFlowPhase) {
+    return {
+      "pre-experience": preSection,
+      "story-experience": storySection,
+      "post-experience": feedbackSection,
+      complete: completeSection
+    }[target];
+  }
+
+  function canNavigateTo(target: JourneyTarget) {
+    if (target === "home") {
+      return true;
+    }
+
+    return researchFlow.getSnapshot().phase === target;
+  }
+
+  function getBlockedNavigationStatus(target: JourneyTarget) {
+    if (target === "pre-experience") {
+      return researchFlow.getSnapshot().phase === "pre-experience"
+        ? "可以进入阅读前问题。"
+        : "已保留现有研究记录，不能回到体验前问题。";
+    }
+
+    return "请按当前研究阶段继续，不能绕过必要评分门禁。";
+  }
+
+  function refreshJourneyNavigation() {
+    const snapshot = researchFlow.getSnapshot();
+    const currentTarget: JourneyTarget =
+      currentPage === "home" ? "home" : snapshot.phase;
+
+    journeyNavLinks.forEach((link, target) => {
+      const isCurrent = target === currentTarget;
+      const isAllowed = canNavigateTo(target);
+
+      link.setAttribute("aria-current", isCurrent ? "page" : "false");
+      link.setAttribute("aria-disabled", String(!isAllowed));
+      link.tabIndex = isAllowed ? 0 : -1;
+    });
+  }
+
+  function focusStage(section: HTMLElement) {
+    section.focus({ preventScroll: true });
+    scrollStageIntoView(section);
+  }
+
+  function goToCurrentFlowPage() {
     currentPage = "flow";
     setHomeHidden(true);
     refreshFlowSections();
-    scrollStageIntoView(preSection);
+    focusStage(getJourneySection(researchFlow.getSnapshot().phase));
+  }
+
+  function goHome() {
+    currentPage = "home";
+    setHomeHidden(false);
+    refreshFlowSections();
+    refreshJourneyNavigation();
+    focusStage(hero);
+  }
+
+  function requestNavigation(target: JourneyTarget) {
+    if (!canNavigateTo(target)) {
+      journeyStatus.textContent = getBlockedNavigationStatus(target);
+      return;
+    }
+
+    if (target === "home") {
+      goHome();
+      return;
+    }
+
+    currentPage = "flow";
+    setHomeHidden(true);
+    refreshFlowSections();
+    focusStage(getJourneySection(target));
   }
 
   function refreshFlowSections() {
@@ -866,6 +988,7 @@ export function renderExperience(
     flowSections.forEach(([section, isHidden]) => {
       setFlowSectionHidden(section, currentPage === "home" || isHidden);
     });
+    refreshJourneyNavigation();
   }
 
   function scrollStageIntoView(section: HTMLElement) {
@@ -946,7 +1069,13 @@ export function renderExperience(
   comment.addEventListener("input", () => {
     commentCounter.textContent = `${comment.value.length} / 400`;
   });
-  action.addEventListener("click", goToPreExperiencePage);
+  journeyNavLinks.forEach((link, target) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      requestNavigation(target);
+    });
+  });
+  action.addEventListener("click", goToCurrentFlowPage);
 
   preForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -959,14 +1088,14 @@ export function renderExperience(
 
     researchFlow.submitPreExperience(input);
     refreshFlowSections();
-    scrollStageIntoView(storySection);
+    focusStage(storySection);
   });
 
   storyComplete.addEventListener("click", () => {
     researchFlow.markStoryComplete();
     refreshFlowSections();
     refreshFeedbackState();
-    scrollStageIntoView(feedbackSection);
+    focusStage(feedbackSection);
   });
 
   form.addEventListener("submit", async (event) => {
@@ -1005,7 +1134,7 @@ export function renderExperience(
         feedbackRecordId: result.recordId
       });
       refreshFlowSections();
-      scrollStageIntoView(completeSection);
+      focusStage(completeSection);
     } catch {
       form.dataset.feedbackStatus = "failed";
       submit.disabled = false;
@@ -1017,7 +1146,9 @@ export function renderExperience(
 
   const completeSection = document.createElement("section");
   completeSection.className = "completion-panel";
+  completeSection.id = "complete";
   completeSection.setAttribute("aria-labelledby", "completion-title");
+  completeSection.tabIndex = -1;
   appendTextElement(completeSection, "p", "eyebrow", "5 of 5 · Exhibition complete");
   const completionTitle = appendTextElement(
     completeSection,
@@ -1175,6 +1306,15 @@ export function renderExperience(
 
   refreshFlowSections();
   container.append(main);
+
+  if (
+    isStoryShareEntryForStory(
+      experience.story.id,
+      globalThis.location?.href ?? ""
+    )
+  ) {
+    focusStage(storySection);
+  }
 }
 
 const app = document.querySelector<HTMLDivElement>("#app");

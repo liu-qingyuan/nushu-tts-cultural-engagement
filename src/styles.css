@@ -496,6 +496,61 @@ h1 {
     repeating-linear-gradient(90deg, var(--hairline) 0 1px, transparent 1px 36px);
 }
 
+.journey-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  align-items: stretch;
+  padding: 0 clamp(28px, 6vw, 88px);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: rgba(251, 245, 233, 0.96);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px rgba(82, 60, 34, 0.1);
+}
+
+.journey-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 54px;
+  padding: 0 clamp(12px, 2vw, 24px);
+  border-right: 1px solid rgba(105, 82, 55, 0.16);
+  color: var(--ink-soft);
+  font-size: 0.94rem;
+  font-weight: 760;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.journey-nav a:first-child {
+  border-left: 1px solid rgba(105, 82, 55, 0.16);
+}
+
+.journey-nav a:hover:not([aria-disabled="true"]),
+.journey-nav a[aria-current="page"] {
+  background: var(--green);
+  color: var(--paper-light);
+}
+
+.journey-nav a[aria-disabled="true"] {
+  color: rgba(113, 105, 93, 0.58);
+  cursor: not-allowed;
+}
+
+.journey-nav a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
 .journey-status {
   margin: 0;
   padding: 16px clamp(28px, 6vw, 88px);
@@ -2369,6 +2424,20 @@ h1 {
     justify-self: stretch;
   }
 
+  .journey-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0 22px;
+    scrollbar-width: thin;
+  }
+
+  .journey-nav a {
+    flex: 0 0 auto;
+    min-height: 50px;
+    padding: 0 16px;
+    white-space: nowrap;
+  }
+
   .participation-actions__grid {
     grid-template-columns: 1fr;
     border-top: 1px solid rgba(105, 82, 55, 0.18);
@@ -2522,6 +2591,10 @@ h1 {
 
   .journey-status {
     padding: 14px 18px;
+  }
+
+  .journey-nav {
+    padding: 0 18px;
   }
 
   .pre-panel {

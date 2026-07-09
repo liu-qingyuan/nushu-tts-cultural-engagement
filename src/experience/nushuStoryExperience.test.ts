@@ -71,6 +71,11 @@ function getJourneySections(app: HTMLElement | null) {
   };
 }
 
+function getJourneyNavLink(app: HTMLElement | null, label: string) {
+  return Array.from(app?.querySelectorAll<HTMLAnchorElement>(".journey-nav a") ?? [])
+    .find((link) => link.textContent === label);
+}
+
 describe("default Nushu story experience", () => {
   beforeEach(() => {
     globalThis.localStorage?.clear();
@@ -197,7 +202,125 @@ describe("default Nushu story experience", () => {
     expect(preSection?.hidden).toBe(false);
     expect(preSection?.getAttribute("aria-hidden")).toBe("false");
     expect(journeyStatus?.hidden).toBe(false);
+    expect(app?.querySelector<HTMLElement>(".journey-nav")?.hidden).toBe(false);
     expect(app?.textContent).toContain("进入故事前，先记录你的起点");
+  });
+
+  it("keeps stage navigation behind the current research gate", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    startReadingExperience(app);
+
+    const {
+      home,
+      preSection,
+      storySection,
+      feedbackSection,
+      completionSection
+    } = getJourneySections(app);
+    const beforeReading = getJourneyNavLink(app, "Before Reading");
+    const story = getJourneyNavLink(app, "Story");
+    const feedback = getJourneyNavLink(app, "Feedback");
+    const complete = getJourneyNavLink(app, "Complete");
+
+    expect(beforeReading?.getAttribute("aria-current")).toBe("page");
+    expect(beforeReading?.getAttribute("aria-disabled")).toBe("false");
+    expect(story?.getAttribute("aria-disabled")).toBe("true");
+    expect(story?.tabIndex).toBe(-1);
+    expect(feedback?.getAttribute("aria-disabled")).toBe("true");
+    expect(complete?.getAttribute("aria-disabled")).toBe("true");
+
+    story?.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true })
+    );
+
+    expect(home?.hidden).toBe(true);
+    expect(preSection?.hidden).toBe(false);
+    expect(storySection?.hidden).toBe(true);
+    expect(feedbackSection?.hidden).toBe(true);
+    expect(completionSection?.hidden).toBe(true);
+    expect(app?.textContent).toContain("不能绕过必要评分门禁");
+  });
+
+  it("lets Home navigation return to the entry page without resetting the research record", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    enterStoryExperience(app);
+
+    const homeNav = getJourneyNavLink(app, "Home");
+    const {
+      home,
+      preSection,
+      storySection,
+      feedbackSection,
+      completionSection
+    } = getJourneySections(app);
+
+    expect(homeNav?.getAttribute("aria-disabled")).toBe("false");
+    expect(storySection?.hidden).toBe(false);
+
+    homeNav?.click();
+
+    expect(home?.hidden).toBe(false);
+    expect(preSection?.hidden).toBe(true);
+    expect(storySection?.hidden).toBe(true);
+    expect(feedbackSection?.hidden).toBe(true);
+    expect(completionSection?.hidden).toBe(true);
+    expect(document.activeElement).toBe(home);
+
+    startReadingExperience(app);
+
+    expect(home?.hidden).toBe(true);
+    expect(preSection?.hidden).toBe(true);
+    expect(storySection?.hidden).toBe(false);
+    expect(app?.textContent).toContain("研究阶段：默认女书故事体验");
+    expect(getJourneyNavLink(app, "Story")?.getAttribute("aria-current")).toBe(
+      "page"
+    );
+  });
+
+  it("moves focus into each current stage as the complete flow advances", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+    const {
+      preSection,
+      storySection,
+      feedbackSection,
+      completionSection
+    } = getJourneySections(app);
+
+    startReadingExperience(app);
+    expect(document.activeElement).toBe(preSection);
+
+    selectRating(app, "preFamiliarity", 2);
+    selectRating(app, "preInterest", 4);
+    selectRating(app, "preParticipationIntent", 3);
+    findButtonByText(app, "进入故事体验")?.click();
+    expect(document.activeElement).toBe(storySection);
+
+    completeStoryExperience(app);
+    expect(document.activeElement).toBe(feedbackSection);
+
+    selectRating(app, "postFamiliarity", 4);
+    selectRating(app, "postInterest", 5);
+    selectRating(app, "postParticipationIntent", 3);
+    findButtonByText(app, "Submit reflection")?.click();
+    await waitForFeedbackSubmission();
+
+    expect(document.activeElement).toBe(completionSection);
+    expect(findButtonByText(app, "Save reading card")).toBeDefined();
+    expect(findButtonByText(app, "Share this experience")).toBeDefined();
   });
 
   it("keeps the before-reading note locked until all three starting scores are recorded", async () => {
