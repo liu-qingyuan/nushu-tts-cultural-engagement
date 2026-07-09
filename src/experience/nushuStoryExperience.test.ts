@@ -202,6 +202,7 @@ describe("default Nushu story experience", () => {
     startReadingExperience(app);
 
     expect(startStory?.disabled).toBe(true);
+    expect(app?.textContent).toContain("还需完成 3 项体验前问题后即可进入故事");
     expect(app?.textContent).toContain("这不是测试，没有对错");
     expect(app?.textContent).toContain("女书字样（一局部）");
 
@@ -209,6 +210,7 @@ describe("default Nushu story experience", () => {
     selectRating(app, "preInterest", 4);
 
     expect(startStory?.disabled).toBe(true);
+    expect(app?.textContent).toContain("还需完成 1 项体验前问题后即可进入故事");
 
     selectRating(app, "preParticipationIntent", 3);
 
@@ -219,6 +221,36 @@ describe("default Nushu story experience", () => {
 
     expect(storySection?.hidden).toBe(false);
     expect(app?.textContent).toContain("研究阶段：默认女书故事体验");
+  });
+
+  it("shows only the story page after the before-reading record is submitted", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+
+    const { renderExperience } = await import("../main");
+    const app = document.querySelector<HTMLElement>("#app");
+    renderExperience(app as HTMLElement);
+
+    const home = app?.querySelector<HTMLElement>(".hero");
+    const preSection = app?.querySelector<HTMLElement>("#pre-experience");
+    const storySection = app?.querySelector<HTMLElement>("#experience-preview");
+    const feedbackSection = app?.querySelector<HTMLElement>(".feedback-panel");
+    const completionSection = app?.querySelector<HTMLElement>(".completion-panel");
+    const journeyStatus = app?.querySelector<HTMLElement>(".journey-status");
+
+    enterStoryExperience(app);
+
+    expect(home?.hidden).toBe(true);
+    expect(home?.getAttribute("aria-hidden")).toBe("true");
+    expect(preSection?.hidden).toBe(true);
+    expect(preSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(storySection?.hidden).toBe(false);
+    expect(storySection?.getAttribute("aria-hidden")).toBe("false");
+    expect(feedbackSection?.hidden).toBe(true);
+    expect(feedbackSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(completionSection?.hidden).toBe(true);
+    expect(completionSection?.getAttribute("aria-hidden")).toBe("true");
+    expect(journeyStatus?.hidden).toBe(false);
+    expect(journeyStatus?.textContent).toBe("研究阶段：默认女书故事体验");
   });
 
   it("keeps inactive journey stages hidden from assistive technology", async () => {

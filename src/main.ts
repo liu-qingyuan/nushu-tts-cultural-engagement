@@ -383,7 +383,7 @@ export function renderExperience(
     preForm,
     "p",
     "research-form__status",
-    "完成三项体验前问题后即可进入故事。"
+    "还需完成 3 项体验前问题后即可进入故事。"
   );
   preStatus.setAttribute("role", "status");
   preStatus.setAttribute("aria-live", "polite");
@@ -884,15 +884,19 @@ export function renderExperience(
   }
 
   function refreshPreState() {
-    const snapshot = researchFlow.updatePreExperience(
-      readScaleInput(preForm, preRatingGroups)
-    );
+    const preInput = readScaleInput(preForm, preRatingGroups);
+    const snapshot = researchFlow.updatePreExperience(preInput);
+    const completedRatings = preRatingGroups.filter(
+      (group) => typeof preInput[group.key] === "number"
+    ).length;
+    const missingRatings = preRatingGroups.length - completedRatings;
+
     preSubmit.disabled = !snapshot.canAdvance;
     preSubmit.classList.toggle("primary-action--ready", snapshot.canAdvance);
     preForm.dataset.researchStatus = snapshot.canAdvance ? "ready" : "empty";
     preStatus.textContent = snapshot.canAdvance
       ? "可以进入默认女书故事体验。"
-      : "完成三项体验前问题后即可进入故事。";
+      : `还需完成 ${missingRatings} 项体验前问题后即可进入故事。`;
   }
 
   function refreshFeedbackState() {
