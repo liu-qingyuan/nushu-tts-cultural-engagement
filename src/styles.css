@@ -153,7 +153,13 @@ a {
 
 .brand-mark {
   gap: 12px;
+  min-height: 44px;
   text-decoration: none;
+}
+
+.brand-mark:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
 }
 
 .brand-mark__seal {
@@ -184,6 +190,10 @@ a {
 
 .hero-nav a {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
   color: var(--ink-soft);
   text-decoration: none;
   transition:
@@ -516,7 +526,7 @@ h1 {
   bottom: 0;
   left: 0;
   width: clamp(42px, 5vw, 72px);
-  content: "女书 · 无声的书写";
+  content: "";
   display: flex;
   align-items: center;
   justify-content: center;
@@ -580,7 +590,7 @@ h1 {
   bottom: 0;
   left: 0;
   width: clamp(96px, 12vw, 180px);
-  content: "𛅰 𛅱 𛅲 𛅳 𛅴";
+  content: "";
   display: flex;
   align-items: center;
   justify-content: center;
@@ -728,7 +738,7 @@ h1 {
 .pre-panel .research-form__status::before {
   width: 28px;
   height: 28px;
-  content: "○";
+  content: "";
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -738,7 +748,9 @@ h1 {
 }
 
 .pre-panel .research-form[data-research-status="ready"] .research-form__status::before {
-  content: "✓";
+  background:
+    linear-gradient(45deg, transparent 43%, currentColor 43% 57%, transparent 57%) 11px 6px / 8px 15px no-repeat,
+    linear-gradient(-45deg, transparent 38%, currentColor 38% 58%, transparent 58%) 5px 12px / 10px 8px no-repeat;
 }
 
 .pre-panel .primary-action {
@@ -753,7 +765,10 @@ h1 {
 
 .pre-panel .primary-action::after {
   margin-left: 20px;
-  content: "→";
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: currentColor;
   font-size: 1.25rem;
 }
 
@@ -1385,7 +1400,10 @@ h1 {
   margin-right: 10px;
   border: 1px solid currentColor;
   border-radius: 999px;
-  content: "✓";
+  content: "";
+  background:
+    linear-gradient(45deg, transparent 43%, currentColor 43% 57%, transparent 57%) 11px 6px / 8px 15px no-repeat,
+    linear-gradient(-45deg, transparent 38%, currentColor 38% 58%, transparent 58%) 5px 12px / 10px 8px no-repeat;
 }
 
 .participation-actions__share-link {
@@ -1570,23 +1588,34 @@ h1 {
 .rating-group::before {
   width: 24px;
   height: 24px;
-  content: "✽";
+  content: "";
   color: var(--accent);
   font-size: 1.2rem;
   line-height: 1;
+  background:
+    linear-gradient(currentColor, currentColor) 50% 0 / 1px 100% no-repeat,
+    linear-gradient(90deg, currentColor, currentColor) 0 50% / 100% 1px no-repeat;
+  transform: rotate(45deg);
 }
 
-.feedback-form::before {
+.feedback-form__context {
   grid-column: 1;
   grid-row: 1 / span 3;
   padding-right: 28px;
   border-right: 1px solid rgba(105, 82, 55, 0.22);
   color: var(--ink-soft);
-  content: "Your reflection\A 你的感受\A\AAfter listening to the story, how do you feel about Nushu, the women who used it, and the world they lived in?\A\A在聆听完这个故事后，你对女书、书写它的女性，以及她们所处的世界，有了怎样的感受？";
   font-size: 1rem;
   font-weight: 520;
   line-height: 1.72;
-  white-space: pre-line;
+}
+
+.feedback-form__context p {
+  margin: 0 0 14px;
+}
+
+.feedback-form__context p:nth-child(-n + 2) {
+  color: var(--ink);
+  font-weight: 760;
 }
 
 .rating-group__legend,
@@ -1810,7 +1839,11 @@ h1 {
   border-radius: 999px;
   background: var(--green);
   color: var(--paper-light);
-  content: "✓";
+  content: "";
+  background:
+    linear-gradient(45deg, transparent 43%, var(--paper-light) 43% 57%, transparent 57%) 11px 6px / 8px 15px no-repeat,
+    linear-gradient(-45deg, transparent 38%, var(--paper-light) 38% 58%, transparent 58%) 5px 12px / 10px 8px no-repeat,
+    var(--green);
 }
 
 .feedback-form[data-feedback-status="empty"] .feedback-form__status,
@@ -1823,7 +1856,7 @@ h1 {
 .feedback-form[data-feedback-status="empty"] .feedback-form__status::before {
   background: transparent;
   color: var(--accent);
-  content: "○";
+  content: "";
   box-shadow: inset 0 0 0 1px currentColor;
 }
 
@@ -1835,11 +1868,16 @@ h1 {
 
 .feedback-form[data-feedback-status="failed"] .feedback-form__status::before {
   background: var(--accent);
-  content: "!";
+  content: "";
 }
 
 .feedback-form[data-feedback-status="submitting"] .feedback-form__status::before {
-  content: "…";
+  content: "";
+  background:
+    radial-gradient(circle at 35% 50%, var(--paper-light) 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 50%, var(--paper-light) 0 2px, transparent 3px),
+    radial-gradient(circle at 65% 50%, var(--paper-light) 0 2px, transparent 3px),
+    var(--green);
 }
 
 .feedback-submit {
@@ -2390,7 +2428,7 @@ h1 {
     box-shadow: none;
   }
 
-  .feedback-form::before {
+  .feedback-form__context {
     display: none;
   }
 

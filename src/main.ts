@@ -728,6 +728,24 @@ export function renderExperience(
   form.className = "feedback-form";
   form.dataset.feedbackStatus = "empty";
 
+  const feedbackContext = document.createElement("div");
+  feedbackContext.className = "feedback-form__context";
+  appendTextElement(feedbackContext, "p", "", "Your reflection");
+  appendTextElement(feedbackContext, "p", "", "你的感受");
+  appendTextElement(
+    feedbackContext,
+    "p",
+    "",
+    "Record what shifted after listening."
+  );
+  appendTextElement(
+    feedbackContext,
+    "p",
+    "",
+    "记录听过之后的理解、兴趣和继续探索意愿。"
+  );
+  form.append(feedbackContext);
+
   const ratingInputs: HTMLInputElement[] = [];
   appendRatingGroups(form, postRatingGroups, ratingInputs);
 
@@ -804,15 +822,20 @@ export function renderExperience(
   returnToStory.type = "button";
   returnToStory.textContent = "Return to story  返回故事";
   returnToStory.addEventListener("click", () => {
-    storySection.hidden = false;
-    feedbackSection.hidden = true;
+    setFlowSectionHidden(storySection, false);
+    setFlowSectionHidden(feedbackSection, true);
     journeyStatus.textContent = "研究阶段：默认女书故事体验";
-    storySection.scrollIntoView({ block: "start" });
+    scrollStageIntoView(storySection);
   });
   feedbackSummary.append(returnToStory);
 
   feedbackLayout.append(form, feedbackSummary);
   feedbackSection.append(feedbackHeader, feedbackLayout);
+
+  function setFlowSectionHidden(section: HTMLElement, isHidden: boolean) {
+    section.hidden = isHidden;
+    section.setAttribute("aria-hidden", String(isHidden));
+  }
 
   function refreshFlowSections() {
     const snapshot = researchFlow.getSnapshot();
@@ -822,10 +845,16 @@ export function renderExperience(
       "post-experience": "研究阶段：体验后反馈",
       complete: "研究阶段：流程已完成"
     }[snapshot.phase];
-    preSection.hidden = snapshot.phase !== "pre-experience";
-    storySection.hidden = snapshot.phase !== "story-experience";
-    feedbackSection.hidden = snapshot.phase !== "post-experience";
-    completeSection.hidden = snapshot.phase !== "complete";
+    const flowSections: Array<[HTMLElement, boolean]> = [
+      [preSection, snapshot.phase !== "pre-experience"],
+      [storySection, snapshot.phase !== "story-experience"],
+      [feedbackSection, snapshot.phase !== "post-experience"],
+      [completeSection, snapshot.phase !== "complete"]
+    ];
+
+    flowSections.forEach(([section, isHidden]) => {
+      setFlowSectionHidden(section, isHidden);
+    });
   }
 
   function scrollStageIntoView(section: HTMLElement) {

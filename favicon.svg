@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nushu TTS">
+  <rect width="64" height="64" fill="#fbf5e9"/>
+  <rect x="10" y="8" width="44" height="48" fill="none" stroke="#9a3a28" stroke-width="4"/>
+  <path d="M24 44V20M32 48V16M40 44V20" fill="none" stroke="#9a3a28" stroke-linecap="round" stroke-width="5"/>
+  <path d="M19 33c5-5 21-5 26 0" fill="none" stroke="#344a41" stroke-linecap="round" stroke-width="4"/>
+</svg>
